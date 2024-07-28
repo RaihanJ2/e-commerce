@@ -1,5 +1,4 @@
 "use client";
-import { formatPrice } from "@utils/cart";
 import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
@@ -20,6 +19,14 @@ const ItemList = () => {
   useEffect(() => {
     fetchProducts();
   }, []);
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+    })
+      .format(price)
+      .replace("Rp", "Rp.");
+  };
 
   return (
     <section className="grid md:grid-cols-4 sm:grid-cols-3 grid-cols-2 gap-8 p-4 my-8 ">

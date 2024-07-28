@@ -1,4 +1,4 @@
-import mongoose, { Schema, models, model } from "mongoose";
+import { Schema, models, model } from "mongoose";
 
 const UserSchema = new Schema(
   {
@@ -21,7 +21,7 @@ const UserSchema = new Schema(
       type: String,
     },
     cart: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Cart",
     },
   },

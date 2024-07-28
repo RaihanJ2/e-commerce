@@ -3,12 +3,13 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import axios from "axios";
 import Loading from "@app/loading";
-import { addToCart, formatPrice } from "@utils/cart";
+import { useSession } from "next-auth/react";
 
 export default function ProductDetail({ params }) {
   const { id } = params;
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const { data: session } = useSession();
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -26,13 +27,40 @@ export default function ProductDetail({ params }) {
   if (!product) {
     return <Loading />;
   }
-  const handAddToCart = () => {
-    addToCart({ ...product, quantity });
+  const handleAddToCart = async () => {
+    try {
+      await axios.post(
+        "/api/cart",
+        {
+          userId: session.user.id,
+          productId: product.id,
+          name: product.name,
+          quantity,
+          images: product.images,
+          price: product.price,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${session?.user?.id}`, // Send user id from session
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+    }
   };
   const handleQuantity = (newQuantity) => {
     if (newQuantity > 0) {
       setQuantity(newQuantity);
     }
+  };
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+    })
+      .format(price)
+      .replace("Rp", "Rp.");
   };
 
   return (
@@ -93,7 +121,7 @@ export default function ProductDetail({ params }) {
           <div className="">
             <p className="my-4">{formatPrice(quantity * product.price)}</p>
             <button
-              onClick={handAddToCart}
+              onClick={handleAddToCart}
               className=" bg-black text-white py-2 px-4 rounded"
             >
               Add to Cart

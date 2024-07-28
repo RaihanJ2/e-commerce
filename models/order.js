@@ -1,7 +1,7 @@
 import { Schema, model, models } from "mongoose";
 
-const CartSchema = new Schema({
-  userId: {
+const OrderSchema = new Schema({
+  user: {
     type: Schema.Types.ObjectId,
     required: true,
     ref: "User",
@@ -11,33 +11,25 @@ const CartSchema = new Schema({
       productId: {
         type: Schema.Types.ObjectId,
         required: true,
-        ref: "Product",
-      },
-      name: {
-        type: String,
-        required: true,
       },
       quantity: {
         type: Number,
-        required: true,
-      },
-      images: {
-        type: String,
         required: true,
       },
       price: {
         type: Number,
         required: true,
       },
+      totalAmount: {
+        type: Number,
+        required: true,
+      },
+      createdAt: { type: Date, default: Date.now },
+      updatedAt: { type: Date, default: Date.now },
     },
   ],
-  createAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: { type: Date, default: Date.now },
 });
 
-const Cart = models.Cart || model("Cart", CartSchema);
+const Order = models.Order || model("Order", OrderSchema);
 
-export default Cart;
+export default Order;

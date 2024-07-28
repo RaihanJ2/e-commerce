@@ -1,0 +1,169 @@
+import Cart from "@models/cart";
+import { connectDB } from "@utils/db";
+import mongoose from "mongoose";
+import { getServerSession } from "next-auth";
+
+/*{" GET CART "}*/
+export const GET = async (req) => {
+  try {
+    await connectDB();
+    const userId = await sessionId();
+    const cart = await Cart.findOne({
+      userId,
+    }).populate("items.productId");
+
+    if (!cart) {
+      return new Response(JSON.stringify({ error: "Cart not found" }), {
+        status: 404,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
+    return new Response(JSON.stringify(cart), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 400,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+};
+
+/* POST CART */
+
+export const POST = async (req) => {
+  await connectDB();
+
+  try {
+    const session = await getServerSession({ req });
+    if (!session) {
+      return NextResponse.json(
+        { message: "Not authenticated" },
+        { status: 401 }
+      );
+    }
+
+    const { userId, productId, quantity, name, images, price } =
+      await req.json();
+
+    // Validate request
+    if (!userId || !productId || !quantity || !name || !images || !price) {
+      return NextResponse.json(
+        { message: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // Find the user's cart
+    let cart = await Cart.findOne({ userId });
+    if (!cart) {
+      cart = new Cart({ userId, items: [] });
+    }
+
+    // Check if the product is already in the cart
+    const productIndex = cart.items.findIndex(
+      (item) => item.productId.toString() === productId
+    );
+
+    if (productIndex > -1) {
+      cart.items[productIndex].quantity += quantity;
+    } else {
+      // Add the product to the cart
+      cart.items.push({ productId, name, quantity, images, price });
+    }
+
+    await cart.save();
+
+    return Response.json(cart, { status: 200 });
+  } catch (error) {
+    return Response.json(
+      { message: "Failed to add item to cart", error: error.message },
+      { status: 500 }
+    );
+  }
+};
+
+/* PuT CART */
+
+export const PUT = async (req) => {
+  await connectDB();
+  const { productId, quantity } = await req.json();
+  try {
+    const cart = await Cart.findOne({
+      userId: new mongoose.Types.ObjectId(userId),
+    });
+    if (cart) {
+      const itemIndex = cart.items.findIndex(
+        (item) => item.productId.toString() === productId
+      );
+      if (itemIndex > -1) {
+        cart.items[itemIndex].quantity = quantity;
+        await cart.save();
+        return new Response(JSON.stringify(cart), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+      }
+    }
+    return new Response("Cart or item not found", {
+      status: 404,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error) {
+    return new Response("Failed to update item quantity", {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+};
+
+/* DELETE CART */
+
+export const DELETE = async (req) => {
+  await connectDB();
+  const { productId } = await req.json();
+  try {
+    const userId = await sessionId(req);
+    const cart = await Cart.findOne({
+      userId: new mongoose.Types.ObjectId(userId),
+    });
+    if (cart) {
+      cart.items = cart.items.filter(
+        (item) => item.productId.toString() !== productId
+      );
+      await cart.save();
+      return new Response(JSON.stringify(cart), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
+    return new Response("Cart or item not found", {
+      status: 404,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error) {
+    return new Response("Failed to remove item from cart", {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+};
