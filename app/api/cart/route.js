@@ -5,6 +5,7 @@ import { authOptions } from "../auth/[...nextauth]/route";
 
 const sessionId = async () => {
   const session = await getServerSession(authOptions);
+  console.log("Session:", session); // Debug: Log session
   if (!session) {
     throw new Error("Not authenticated");
   }
@@ -18,7 +19,6 @@ export const POST = async (req) => {
     const { productId, name, quantity, images, price } = await req.json();
     const userId = await sessionId();
     console.log("UserId:", userId);
-
     const post = await Cart.findOneAndUpdate(
       { userId },
       { $push: { items: { productId, name, quantity, images, price } } },

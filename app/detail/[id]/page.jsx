@@ -29,22 +29,13 @@ export default function ProductDetail({ params }) {
   }
   const handleAddToCart = async () => {
     try {
-      await axios.post(
-        "/api/cart",
-        {
-          userId: session.user.id,
-          productId: product.id,
-          name: product.name,
-          quantity,
-          images: product.images,
-          price: product.price,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${session?.user?.id}`, // Send user id from session
-          },
-        }
-      );
+      await axios.post("/api/cart", {
+        productId: product.id,
+        name: product.name,
+        quantity,
+        images: product.images,
+        price: product.price,
+      });
     } catch (error) {
       console.error("Error adding to cart:", error);
     }
