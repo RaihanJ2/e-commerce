@@ -8,6 +8,13 @@ export const authOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_ID,
       clientSecret: process.env.GOOGLE_SECRET,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
+        },
+      },
     }),
   ],
   callbacks: {
@@ -17,10 +24,8 @@ export const authOptions = {
         const sessionUser = await User.findOne({ email: session.user.email });
 
         if (sessionUser) {
-          // Add user ID to the session object
           session.user.id = sessionUser._id.toString();
         } else {
-          // Optional: Handle case where user is not found
           console.warn("User not found in database:", session.user.email);
         }
 

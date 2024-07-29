@@ -3,13 +3,13 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import axios from "axios";
 import Loading from "@app/loading";
-import { useSession } from "next-auth/react";
+import { set } from "mongoose";
 
 export default function ProductDetail({ params }) {
   const { id } = params;
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
-  const { data: session } = useSession();
+  const [selectedSize, setSelectedSize] = useState("");
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -30,8 +30,9 @@ export default function ProductDetail({ params }) {
   const handleAddToCart = async () => {
     try {
       await axios.post("/api/cart", {
-        productId: product.id,
+        productId: product._id,
         name: product.name,
+        size: selectedSize,
         quantity,
         images: product.images,
         price: product.price,
@@ -44,6 +45,9 @@ export default function ProductDetail({ params }) {
     if (newQuantity > 0) {
       setQuantity(newQuantity);
     }
+  };
+  const handleChange = (e) => {
+    setSelectedSize(e.target.value);
   };
   const formatPrice = (price) => {
     return new Intl.NumberFormat("id-ID", {
@@ -72,14 +76,20 @@ export default function ProductDetail({ params }) {
 
           {product.size.length === 1 ? (
             <div>
-              {product.size.map((size, index) => (
-                <p key={index}>Size: {size}</p>
-              ))}
+              <p>Size: {product.size[0]}</p>
             </div>
           ) : (
-            <select className="w-32" name="size" id="size">
+            <select
+              className="w-32"
+              name="size"
+              id="size"
+              value={selectedSize}
+              onChange={handleChange}
+            >
               {product.size.map((size, index) => (
-                <option key={index}>{size}</option>
+                <option key={index} value={size}>
+                  {size}
+                </option>
               ))}
             </select>
           )}
