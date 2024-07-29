@@ -26,19 +26,27 @@ const Cart = () => {
 
   const handleRemove = async (productId) => {
     try {
+      const product = cart.find((item) => item.productId === productId);
+
       await axios.delete("/api/cart", {
-        data: { productId },
+        data: {
+          productId,
+          size: product.size.join(","),
+        },
       });
       fetchCart();
     } catch (error) {
-      console.error("Failed to remove item from cart:", error);
+      console.error("Failed to remove item", error);
     }
   };
 
   const handleQuantity = async (productId, newQuantity) => {
     try {
+      const product = cart.find((item) => item.productId === productId);
+
       await axios.put("/api/cart", {
         productId,
+        size: product.size.join(","),
         quantity: newQuantity,
       });
       fetchCart();
@@ -77,21 +85,20 @@ const Cart = () => {
             <main className="md:w-3/4">
               {cart.map((product) => (
                 <article
-                  className="border border-gray-200 bg-white shadow-sm rounded mb-8 pb-3 lg:p-10"
-                  key={product.productId}
+                  className="border border-gray-200bg-white shadow-sm rounded mb-8 pb-3 lg:p-10"
+                  key={`${product.productId}}`}
                 >
-                  {/* flex flex-wrap justify-evenly lg:flex-row gap-5 mb-4 */}
-                  <div className="flex justify-evenly items-center">
+                  <div className="flex justify-evenly items-center gap-16">
                     <div className="w-full lg:w-2/5 xl:w-2/4">
                       <figure className="flex leading-5">
                         <div>
-                          <div className="block w-16 h-16 rounded border border-gray-200 overflow-hidden">
+                          <div className="block w-16 h-16 rounded border border-gray-200 flex-center">
                             <Image
                               src={`/${product.images}`}
                               alt={product.name}
                               width={100}
                               height={100}
-                              className="object-scale-down max-h-80"
+                              className=""
                             />
                           </div>
                         </div>
@@ -100,7 +107,7 @@ const Cart = () => {
                             <p>
                               <Link
                                 href={`/detail/${product.productId}`}
-                                className="hover:text-blue-600"
+                                className="hover:text-blue-600 pr-4"
                               >
                                 {product.name}
                               </Link>
@@ -109,8 +116,8 @@ const Cart = () => {
                               {product.size.join(", ")}
                             </p>
                           </div>
-                          <p className="font-semibold not-italic">
-                            {formatPrice(product.price)}
+                          <p className="font-semibold not-italic flex flex-row">
+                            {formatPrice(product.price)}{" "}
                           </p>
                         </figcaption>
                       </figure>

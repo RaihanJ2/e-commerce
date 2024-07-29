@@ -38,58 +38,47 @@ export const GET = async (req) => {
 
 /* POST CART */
 
-export const POST = async (req) => {
+try {
   await connectDB();
+  const { productId, name, size, quantity, images, price } = await req.json();
+  const userId = await sessionId();
 
-  try {
-    const session = await getServerSession({ req });
-    if (!session) {
-      return NextResponse.json(
-        { message: "Not authenticated" },
-        { status: 401 }
-      );
-    }
+  const cart = await Cart.findOne({ userId });
 
-    const { userId, productId, quantity, name, images, price } =
-      await req.json();
-
-    // Validate request
-    if (!userId || !productId || !quantity || !name || !images || !price) {
-      return NextResponse.json(
-        { message: "Missing required fields" },
-        { status: 400 }
-      );
-    }
-
-    // Find the user's cart
-    let cart = await Cart.findOne({ userId });
-    if (!cart) {
-      cart = new Cart({ userId, items: [] });
-    }
-
-    // Check if the product is already in the cart
-    const productIndex = cart.items.findIndex(
-      (item) => item.productId.toString() === productId
+  if (cart) {
+    const itemIndex = cart.items.findIndex(
+      (item) => item.productId.equals(productId) && item.size.equals(size)
     );
 
-    if (productIndex > -1) {
-      cart.items[productIndex].quantity += quantity;
+    if (itemIndex > -1) {
+      cart.items[itemIndex].quantity += quantity;
     } else {
-      // Add the product to the cart
-      cart.items.push({ productId, name, quantity, images, price });
+      cart.items.push({ productId, name, size, quantity, images, price });
     }
-
     await cart.save();
-
-    return Response.json(cart, { status: 200 });
-  } catch (error) {
-    return Response.json(
-      { message: "Failed to add item to cart", error: error.message },
-      { status: 500 }
-    );
+  } else {
+    await Cart.create({
+      userId,
+      items: [
+        {
+          productId,
+          name,
+          size,
+          quantity,
+          images,
+          price,
+        },
+      ],
+    });
   }
-};
 
+  return new Response(JSON.stringify(cart), { status: 200 });
+} catch (error) {
+  console.error("Error in POST /api/cart:", error);
+  return new Response(JSON.stringify({ error: "Internal Server Error" }), {
+    status: 500,
+  });
+}
 /* PuT CART */
 
 export const PUT = async (req) => {

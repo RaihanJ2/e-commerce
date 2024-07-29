@@ -35,40 +35,49 @@ export const GET = async () => {
 export const POST = async (req) => {
   try {
     await connectDB();
-    const { productId, name, quantity, images, price } = await req.json();
+    const { productId, name, size, quantity, images, price } = await req.json();
     const userId = await sessionId();
 
-    const cart = await Cart.findOne({ userId });
+    let cart = await Cart.findOne({ userId });
 
-    if (cart) {
-      const itemIndex = cart.items.findIndex((item) =>
-        item.productId.equals(productId)
-      );
-
-      if (itemIndex > -1) {
-        cart.items[itemIndex].quantity += quantity;
-      } else {
-        cart.items.push({ productId, name, quantity, images, price });
-      }
-      await cart.save();
-    } else {
-      await Cart.create({
+    if (!cart) {
+      cart = await Cart.create({
         userId,
         items: [
           {
             productId,
             name,
+            size,
             quantity,
             images,
             price,
           },
         ],
       });
+    } else {
+      const itemIndex = cart.items.findIndex(
+        (item) =>
+          item.productId.equals(productId) && item.size.join(",") === size
+      );
+
+      if (itemIndex > -1) {
+        cart.items[itemIndex].quantity += quantity;
+      } else {
+        cart.items.push({
+          productId,
+          name,
+          size,
+          quantity,
+          images,
+          price,
+        });
+      }
+      await cart.save();
     }
 
     return new Response(JSON.stringify(cart), { status: 200 });
   } catch (error) {
-    console.error("Error in POST /api/cart:", error);
+    console.error("Failed to add item to cart:", error);
     return new Response(JSON.stringify({ error: "Internal Server Error" }), {
       status: 500,
     });
@@ -79,37 +88,35 @@ export const POST = async (req) => {
 export const DELETE = async (req) => {
   try {
     await connectDB();
-    const { productId } = await req.json();
+    const { productId, size } = await req.json();
     const userId = await sessionId();
 
     const cart = await Cart.findOne({ userId });
 
     if (cart) {
-      cart.items = cart.items.filter(
-        (item) => !item.productId.equals(productId)
+      const itemIndex = cart.items.findIndex(
+        (item) =>
+          item.productId.equals(productId) && item.size.join(",") === size
       );
-      await cart.save();
-      return new Response(JSON.stringify(cart), {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-        },
+      if (itemIndex > -1) {
+        cart.items.splice(itemIndex, 1);
+        await cart.save();
+        return new Response(JSON.stringify(cart), { status: 200 });
+      } else {
+        return new Response(
+          JSON.stringify({ error: " Item not found in cart" }),
+          { status: 404 }
+        );
+      }
+    } else {
+      return new Response(JSON.stringify({ error: "Cart not found" }), {
+        status: 404,
       });
     }
-
-    return new Response("Cart or item not found", {
-      status: 404,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
   } catch (error) {
-    console.error("Failed to remove item from cart:", error);
-    return new Response("Failed to remove item from cart", {
+    console.error("Failed to delete item from cart:", error);
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
       status: 500,
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 };
@@ -119,16 +126,16 @@ export const DELETE = async (req) => {
 export const PUT = async (req) => {
   try {
     await connectDB();
-    const { productId, quantity } = await req.json();
+    const { productId, size, quantity } = await req.json();
     const userId = await sessionId();
 
     const cart = await Cart.findOne({ userId });
 
     if (cart) {
-      const itemIndex = cart.items.findIndex((item) =>
-        item.productId.equals(productId)
+      const itemIndex = cart.items.findIndex(
+        (item) =>
+          item.productId.equals(productId) && item.size.join(",") === size
       );
-
       if (itemIndex > -1) {
         if (quantity <= 0) {
           cart.items.splice(itemIndex, 1);
@@ -137,15 +144,21 @@ export const PUT = async (req) => {
         }
         await cart.save();
         return new Response(JSON.stringify(cart), { status: 200 });
+      } else {
+        return new Response(
+          JSON.stringify({ error: "Item not found in cart" }),
+          { status: 404 }
+        );
       }
+    } else {
+      return new Response(JSON.stringify({ error: "Cart not found" }), {
+        status: 404,
+      });
     }
   } catch (error) {
-    console.error("Failed to update item in cart:", error);
-    return new Response("Failed to update item in cart", {
+    console.error("Failed to update quantity:", error);
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
       status: 500,
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 };

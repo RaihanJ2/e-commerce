@@ -16,6 +16,9 @@ export default function ProductDetail({ params }) {
       try {
         const res = await axios.get(`/api/product/${id}`);
         setProduct(res.data);
+        if (res.data.size.length === 1) {
+          setSelectedSize(res.data.size[0]);
+        }
       } catch (error) {
         console.error("Error fetching product:", error);
       }
@@ -33,12 +36,13 @@ export default function ProductDetail({ params }) {
         productId: product._id,
         name: product.name,
         size: selectedSize,
-        quantity,
+        quantity: quantity,
         images: product.images,
         price: product.price,
       });
     } catch (error) {
-      console.error("Error adding to cart:", error);
+      console.error("Failed to add item to cart", error);
+      alert("Failed to add item to cart.");
     }
   };
   const handleQuantity = (newQuantity) => {
@@ -46,8 +50,8 @@ export default function ProductDetail({ params }) {
       setQuantity(newQuantity);
     }
   };
-  const handleChange = (e) => {
-    setSelectedSize(e.target.value);
+  const handleSizeClick = (size) => {
+    setSelectedSize(size);
   };
   const formatPrice = (price) => {
     return new Intl.NumberFormat("id-ID", {
@@ -76,22 +80,25 @@ export default function ProductDetail({ params }) {
 
           {product.size.length === 1 ? (
             <div>
-              <p>Size: {product.size[0]}</p>
+              <p>Size: {product.size[0]} </p>
+              <input type="hidden" value={product.size[0]} readOnly />
             </div>
           ) : (
-            <select
-              className="w-32"
-              name="size"
-              id="size"
-              value={selectedSize}
-              onChange={handleChange}
-            >
+            <div className="flex gap-2">
               {product.size.map((size, index) => (
-                <option key={index} value={size}>
+                <button
+                  key={index}
+                  onClick={() => handleSizeClick(size)}
+                  className={`p-2 border rounded ${
+                    selectedSize === size
+                      ? "bg-gray-300 border-black"
+                      : "bg-white"
+                  }`}
+                >
                   {size}
-                </option>
+                </button>
               ))}
-            </select>
+            </div>
           )}
           <div className="w-24">
             <div className="flex flex-row h-10 w-full rounded-lg relative bg-transparent mt-1">

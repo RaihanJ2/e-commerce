@@ -39,7 +39,10 @@ const CartSchema = new Schema({
     type: Date,
     default: Date.now,
   },
-  updatedAt: { type: Date, default: Date.now },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 const Cart = models.Cart || model("Cart", CartSchema);
