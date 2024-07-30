@@ -180,6 +180,9 @@
 .flex-between {
   @apply flex justify-between items-center;
 }
+.flex-evenly {
+  @apply flex justify-evenly items-center;
+}
 
 .footer {
   @apply container h-1/4 px-8 border-4 border-b-0 rounded-tl-2xl rounded-tr-2xl border-black;

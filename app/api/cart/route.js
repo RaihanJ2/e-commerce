@@ -136,12 +136,9 @@ export const PUT = async (req) => {
         (item) =>
           item.productId.equals(productId) && item.size.join(",") === size
       );
+
       if (itemIndex > -1) {
-        if (quantity <= 0) {
-          cart.items.splice(itemIndex, 1);
-        } else {
-          cart.items[itemIndex].quantity = quantity;
-        }
+        cart.items[itemIndex].quantity = quantity;
         await cart.save();
         return new Response(JSON.stringify(cart), { status: 200 });
       } else {
@@ -156,7 +153,7 @@ export const PUT = async (req) => {
       });
     }
   } catch (error) {
-    console.error("Failed to update quantity:", error);
+    console.error("Failed to update item quantity in cart:", error);
     return new Response(JSON.stringify({ error: "Internal Server Error" }), {
       status: 500,
     });
