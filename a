@@ -1,3 +1,5 @@
+from app\Cart\page.jsx
+
 "use client";
 import Image from "next/image";
 import Link from "next/link";
@@ -121,7 +123,7 @@ const Cart = () => {
 
   return (
     <>
-      <section className="w-full mt-2 py-5 sm:py-7 bg-black text-white rounded">
+      <section className="w-full py-5 sm:py-7 bg-blue-100">
         <div className="text-center container max-w-screen-xl mx-auto px-4">
           <h2 className="text-3xl font-semibold mb-2">Item(s) in Cart</h2>
         </div>
@@ -276,3 +278,297 @@ const Cart = () => {
 };
 
 export default Cart;
+
+
+
+from app\_document.js
+
+import Document, { Html, Head, Main, NextScript } from "next/document";
+
+class MyDocument extends Document {
+  render() {
+    return (
+      <Html lang="en">
+        <Head>
+          <script
+            src="https://app.sandbox.midtrans.com/snap/snap.js"
+            data-client-key={process.env.MIDTRANS_CLIENT_KEY}
+          ></script>
+        </Head>
+        <body>
+          <Main />
+          <NextScript />
+        </body>
+      </Html>
+    );
+  }
+}
+
+export default MyDocument;
+
+
+from utils\midtrans.js
+
+import Midtrans from "midtrans-client";
+
+const snap = new Midtrans.Snap({
+  isProduction: false,
+  serverKey: process.env.MIDTRANS_SERVER_KEY,
+  clientKey: process.env.MIDTRANS_CLIENT_KEY,
+});
+
+export const createTransaction = async (orderId, grossAmount) => {
+  const parameter = {
+    transaction_details: {
+      order_id: orderId,
+      gross_amount: grossAmount,
+    },
+  };
+  try {
+    const transaction = await snap.createTransaction(parameter);
+    return transaction;
+  } catch (error) {
+    throw new Error(`Failed to create transaction: ${error.message}`);
+  }
+};
+
+from models\order.js
+
+import { Schema, model, models } from "mongoose";
+
+const OrderSchema = new Schema({
+  userId: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: "User",
+  },
+  items: [
+    {
+      productId: {
+        type: Schema.Types.ObjectId,
+        required: true,
+      },
+      quantity: {
+        type: Number,
+        required: true,
+      },
+      price: {
+        type: Number,
+        required: true,
+      },
+      totalAmount: {
+        type: Number,
+        required: true,
+      },
+    },
+  ],
+  totalAmount: {
+    type: Number,
+    required: true,
+  },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+const Order = models.Order || model("Order", OrderSchema);
+
+export default Order;
+
+from models\user.js
+
+import { Schema, models, model } from "mongoose";
+
+const UserSchema = new Schema(
+  {
+    username: {
+      type: String,
+      required: true,
+      match: [
+        /^(?=.{8,30}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._' ]+(?<![_.])$/,
+        "Username invalid, it should contain 8-30 characters including alphanumeric letters, spaces, apostrophes, and be unique!",
+      ],
+    },
+    email: {
+      type: String,
+      required: true,
+    },
+    image: {
+      type: String,
+    },
+    address: {
+      type: String,
+    },
+    cart: {
+      type: Schema.Types.ObjectId,
+      ref: "Cart",
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const User = models.User || model("User", UserSchema);
+
+export default User;
+
+from models\cart.js
+
+import { Schema, model, models } from "mongoose";
+
+const CartSchema = new Schema({
+  userId: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: "User",
+  },
+  items: [
+    {
+      productId: {
+        type: Schema.Types.ObjectId,
+        required: true,
+        ref: "Product",
+      },
+      name: {
+        type: String,
+        required: true,
+      },
+      size: {
+        type: [String],
+        required: true,
+      },
+      quantity: {
+        type: Number,
+        required: true,
+      },
+      images: {
+        type: String,
+        required: true,
+      },
+      price: {
+        type: Number,
+        required: true,
+      },
+    },
+  ],
+  createAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+const Cart = models.Cart || model("Cart", CartSchema);
+
+export default Cart;
+
+from models\product.js
+
+import { Schema, model, models } from "mongoose";
+
+const ProductSchema = new Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: [String],
+    required: true,
+  },
+  price: {
+    type: Number,
+    required: true,
+  },
+  images: {
+    type: String,
+    required: true,
+  },
+  category: {
+    type: String,
+    required: true,
+    enum: {
+      values: ["Clothes", "Accessories"],
+    },
+  },
+  size: {
+    type: [String],
+    required: true,
+  },
+  stock: {
+    type: Number,
+    required: true,
+  },
+  ratings: {
+    type: Number,
+  },
+});
+
+const Product = models.Product || model("Product", ProductSchema);
+
+export default Product;
+
+
+from pages\api\order.js
+
+import { connectDB } from "@utils/db";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route";
+import { createTransaction } from "@utils/midtrans";
+import Order from "@models/order";
+
+const sessionId = async () => {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    throw new Error("Not authenticated");
+  }
+  return session.user.id;
+};
+
+export const POST = async (req) => {
+  await connectDB();
+
+  try {
+    const userId = await sessionId();
+    const { items } = await req.json();
+
+    const updatedItems = items.map((item) => ({
+      ...item,
+      totalAmount: item.price * item.quantity,
+    }));
+
+    let totalAmount = updatedItems.reduce(
+      (sum, item) => sum + item.totalAmount,
+      0
+    );
+
+    const order = await Order.create({
+      userId,
+      items: updatedItems,
+      totalAmount,
+    });
+
+    const transaction = await createTransaction(
+      order._id.toString(),
+      totalAmount
+    );
+
+    return new Response(
+      JSON.stringify({
+        order,
+        transactionToken: transaction.token,
+      }),
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Failed to create order:", error);
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
+      status: 500,
+    });
+  }
+};
+
+
+how do i fill the order detail in midtrans (customer details and product details)

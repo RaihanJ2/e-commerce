@@ -60,9 +60,6 @@ export const authOptions = {
   },
   pages: {
     signIn: "/auth/signin", // Optional: custom sign-in page
-    error: "/auth/error", // Optional: custom error page
-    verifyRequest: "/auth/verify-request", // Optional: custom verification request page
-    newAccount: "/auth/new-account", // Optional: custom new account page
   },
 };
 
