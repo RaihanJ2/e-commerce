@@ -4,12 +4,11 @@ import Image from "next/image";
 import axios from "axios";
 import Loading from "@app/loading";
 import Review from "@app/Review/page";
-import Recommendations from "@components/Recommendations";
+import { FaStar } from "react-icons/fa6";
 
 export default function ProductDetail({ params }) {
   const { id } = params;
   const [product, setProduct] = useState(null);
-  const [recommendations, setRecommendations] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("");
 
@@ -20,10 +19,6 @@ export default function ProductDetail({ params }) {
         const res = await axios.get(`/api/product/${id}`);
         if (isMounted) {
           setProduct(res.data);
-
-          const recRes = await axios.get(`/api/recommendations`);
-          const recData = recRes.data.recommendations[id] || [];
-          setRecommendations(recData);
 
           if (res.data.size.length === 1) {
             setSelectedSize(res.data.size[0]);
@@ -97,6 +92,14 @@ export default function ProductDetail({ params }) {
           />
           <div className="flex flex-col px-8 w-2/3 ml-10 gap-4">
             <h1 className="text-2xl font-bold">{product.name}</h1>
+            <span
+              className={`flex flex-row items-center text-2xl ${
+                product.avgRatings < 3 ? "text-red-500" : "text-yellow-500"
+              }`}
+            >
+              {product.avgRatings} <p className="text-black">/5</p>{" "}
+              <FaStar className="text-yellow-500" />
+            </span>
 
             {product.description.map((desc, index) => (
               <p className="font-medium text-lg" key={index}>
@@ -166,7 +169,6 @@ export default function ProductDetail({ params }) {
           </div>
         </div>
       </section>
-      <Recommendations recommendations={recommendations} />
       <section className="w-full py-8">
         <Review productId={product._id} />
       </section>

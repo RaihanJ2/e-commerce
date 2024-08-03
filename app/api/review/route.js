@@ -2,6 +2,8 @@ import Review from "@models/review";
 import { connectDB } from "@utils/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
+import Order from "@models/order";
+import Product from "@models/product";
 
 const getSessionUserId = async () => {
   const session = await getServerSession(authOptions);
@@ -45,7 +47,10 @@ export const POST = async (req) => {
     });
 
     if (!userOrder) {
-      throw new Error("User has not ordered this product");
+      return new Response(
+        JSON.stringify({ error: "User has not ordered this product" }),
+        { status: 403 }
+      );
     }
 
     const newReview = new Review({
@@ -58,7 +63,27 @@ export const POST = async (req) => {
     });
 
     await newReview.save();
-    return new Response(JSON.stringify(newReview), { status: 201 });
+
+    const reviews = await Review.find({ productId });
+
+    if (reviews.length === 0) {
+      return new Response(
+        JSON.stringify({ message: "No reviews found for this product" }),
+        { status: 404 }
+      );
+    }
+
+    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+    const avgRating = totalRating / reviews.length;
+
+    await Product.findByIdAndUpdate(productId, { avgRatings: avgRating });
+
+    return new Response(
+      JSON.stringify({
+        message: "Review added and average rating updated successfully",
+      }),
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Failed to create review", error);
     return new Response(JSON.stringify({ error: "Internal Server Error" }), {

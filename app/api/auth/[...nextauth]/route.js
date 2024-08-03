@@ -2,6 +2,8 @@ import User from "@models/user";
 import { connectDB } from "@utils/db";
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
 
 export const authOptions = {
   providers: [
@@ -16,6 +18,24 @@ export const authOptions = {
         },
       },
     }),
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        await connectDB();
+        const user = await User.findOne({ email: credentials.email });
+        if (
+          !user ||
+          !(await bcrypt.compare(credentials.password, user.password))
+        ) {
+          throw new Error("Invalid email or password");
+        }
+        return user;
+      },
+    }),
   ],
   callbacks: {
     async session({ session }) {
@@ -28,24 +48,28 @@ export const authOptions = {
         } else {
           console.warn("User not found in database:", session.user.email);
         }
-
         return session;
       } catch (error) {
         console.error("Error fetching user:", error);
         return session;
       }
     },
-    async signIn({ profile }) {
+    async signIn({ user, account, profile, email, credentials }) {
       try {
         await connectDB();
-        const userExist = await User.findOne({ email: profile.email });
+        if (account.provider === "google") {
+          const userExist = await User.findOne({ email: profile.email });
 
-        if (!userExist) {
-          await User.create({
-            email: profile.email,
-            username: profile.name.replace(/\s+/g, ""),
-            image: profile.picture,
-          });
+          if (!userExist) {
+            await User.create({
+              email: profile.email,
+              username: profile.name.replace(/\s+/g, ""),
+              image: profile.picture,
+            });
+          }
+        }
+        if (account.provider === "credentials") {
+          return true;
         }
         return true;
       } catch (error) {
@@ -55,11 +79,11 @@ export const authOptions = {
     },
   },
   session: {
-    strategy: "jwt", // Ensure you're using JWT strategy
-    maxAge: 60 * 60, // Session expiration time (1 hour)
+    strategy: "jwt",
+    maxAge: 60 * 60,
   },
   pages: {
-    signIn: "/auth/signin", // Optional: custom sign-in page
+    signIn: "/auth/signin",
   },
 };
 

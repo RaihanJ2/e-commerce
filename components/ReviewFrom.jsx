@@ -4,7 +4,7 @@ import { useState } from "react";
 import axios from "axios";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
-import { FaStar } from "react-icons/fa";
+import { FaStar, FaUser } from "react-icons/fa";
 
 const ReviewForm = ({ productId }) => {
   const { data: session } = useSession();
@@ -49,16 +49,19 @@ const ReviewForm = ({ productId }) => {
     >
       <div className="flex flex-row mb-4">
         <div className="flex-1 flex justify-start items-center gap-3 cursor-pointer">
-          <Image
-            src={session?.user.image}
-            alt={session?.user.username}
-            width={60}
-            height={60}
-            className="rounded-full object-contain"
-          />
-
+          {session?.user.image ? (
+            <Image
+              src={session?.user.image}
+              alt={session?.user.username}
+              width={60}
+              height={60}
+              className="rounded-full object-contain"
+            />
+          ) : (
+            <FaUser className="rounded-full text-white text-3xl p-1 border-2" />
+          )}
           <div className="flex flex-col">
-            <label className="font-bold text-white">{session?.user.name}</label>
+            <label className="font-bold text-white">{session.user.name}</label>
             <div className="flex cursor-pointer">
               {[1, 2, 3, 4, 5].map((value) => (
                 <FaStar

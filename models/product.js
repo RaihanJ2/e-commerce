@@ -32,7 +32,7 @@ const ProductSchema = new Schema({
     type: Number,
     required: true,
   },
-  ratings: {
+  avgRatings: {
     type: Number,
   },
 });

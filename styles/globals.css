@@ -84,7 +84,7 @@
   @apply rounded-full border border-white p-2 text-white hover:scale-110 duration-150 ease-in-out transition-all text-center text-sm flex items-center justify-center;
 }
 .cart-btn {
-  @apply rounded-full border border-white p-3 text-white hover:scale-110 duration-150 ease-in-out transition-all text-center text-sm flex items-center justify-center;
+  @apply rounded-full border w-fit h-fit border-white p-2 text-white hover:scale-110 duration-150 ease-in-out transition-all text-center text-base flex items-center justify-center;
 }
 
 .outline-btn {

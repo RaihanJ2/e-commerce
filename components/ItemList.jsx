@@ -95,5 +95,14 @@ const ItemList = () => {
     </>
   );
 };
+export async function getServerSideProps() {
+  const res = await axios.get("http://localhost:3000/api/products");
+  const products = res.data;
 
+  return {
+    props: {
+      products,
+    },
+  };
+}
 export default ItemList;
