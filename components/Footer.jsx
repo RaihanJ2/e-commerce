@@ -5,7 +5,7 @@ import { FaXTwitter, FaFacebookF, FaInstagram } from "react-icons/fa6";
 const Footer = () => {
   return (
     <footer className="footer">
-      <h1 className="text-3xl font-bold text-black pt-4 text-center sm:text-left pb-0 sm:pb-4">
+      <h1 className="text-3xl font-bold text-white pt-4 text-center sm:text-left pb-0 sm:pb-4">
         ABOUT US
       </h1>
       <div className="flex flex-col sm:flex-row pb-4 justify-around gap-4 sm:gap-0">
@@ -15,19 +15,19 @@ const Footer = () => {
           </Link>
         </section>
         <section className="w-full flex flex-col items-center justify-center sm:items-start sm:justify-start">
-          <h1 className="text-l text-black font-bold">PRODUCT</h1>
-          <Link href="/" className="text-black hover:underline hover:font-bold">
+          <h1 className="text-l text-white font-bold">PRODUCT</h1>
+          <Link href="/" className="text-white hover:underline hover:font-bold">
             Clothes
           </Link>
-          <Link href="/" className="text-black hover:underline hover:font-bold">
+          <Link href="/" className="text-white hover:underline hover:font-bold">
             Accessories
           </Link>
         </section>
         <section className="w-full flex flex-col items-center justify-center sm:items-start sm:justify-start">
-          <h1 className="text-l text-black font-bold">CONTACTS</h1>
-          <p className="text-black">Email. cecilia@ceciliamarin.id</p>
-          <p className="text-black">Website www.ceciliamarin.id</p>
-          <div className="flex text-2xl font-bold gap-8 text-black">
+          <h1 className="text-l text-white font-bold">CONTACTS</h1>
+          <p className="text-white">Email. cecilia@ceciliamarin.id</p>
+          <p className="text-white">Website www.ceciliamarin.id</p>
+          <div className="flex text-2xl font-bold gap-8 text-white">
             <Link href="/" className="p-2 rounded-full">
               <FaXTwitter />
             </Link>
@@ -40,12 +40,12 @@ const Footer = () => {
           </div>
         </section>
       </div>
-      <div className="border-t-2 border-t-black"></div>
+      <div className="border-t-2 border-t-white"></div>
       <section className="flex flex-between">
-        <div className="flex py-2 hover:font-bold">
-          <h1 className="text-black">@2024</h1>
-          <Link href="/" className="">
-            Company® Official
+        <div className="flex py-2">
+          <h1 className="text-secondary">@2024, </h1>
+          <Link href="/" className="text-secondary">
+            &nbsp;Company® Official
           </Link>
         </div>
       </section>

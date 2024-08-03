@@ -5,6 +5,13 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  theme: {
+    extend: {
+      fontFamily: {
+        gothic: ["Didact Gothic", "sans-serif"],
+      },
+    },
+  },
 
   plugins: [],
 };

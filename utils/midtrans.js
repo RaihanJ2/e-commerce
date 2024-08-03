@@ -10,7 +10,8 @@ export const createTransaction = async (
   orderId,
   grossAmount,
   customerDetails,
-  items
+  items,
+  shippingAddress // New parameter for shipping address
 ) => {
   const parameter = {
     transaction_details: {
@@ -20,6 +21,7 @@ export const createTransaction = async (
     customer_details: {
       name: customerDetails.name,
       email: customerDetails.email,
+      phone: shippingAddress.phoneNo, // Add phone number
     },
     item_details: items.map((item) => ({
       id: item.productId.toString(),
@@ -28,6 +30,7 @@ export const createTransaction = async (
       name: item.name,
     })),
   };
+
   try {
     const transaction = await snap.createTransaction(parameter);
     return transaction;

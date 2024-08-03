@@ -17,8 +17,8 @@ const Nav = () => {
     })();
   }, []);
   return (
-    <nav className="w-full flex-between py-3 border-b-2 border-b-black">
-      <Link href="/" className="flex font-bold">
+    <nav className="w-full px-6 flex-between py-3 border-4 border-t-0 rounded-bl-2xl rounded-br-2xl border-b-white">
+      <Link href="/" className="flex font-bold text-white">
         NAVBAR
       </Link>
       {/* Desktop Navigation */}
@@ -34,7 +34,7 @@ const Nav = () => {
               onClick={() => {
                 signOut();
               }}
-              className="outline-btn"
+              className="sign-btn"
             >
               Sign Out
             </button>
@@ -43,7 +43,7 @@ const Nav = () => {
                 src={session.user.image}
                 width={37}
                 height={37}
-                className="rounded-full"
+                className="rounded-full border-white border-2"
                 alt="profile"
               />
             </Link>
@@ -56,7 +56,7 @@ const Nav = () => {
                   type="button"
                   key={provider.name}
                   onClick={() => signIn(provider.id)}
-                  className="black-btn"
+                  className="sign-btn"
                 >
                   Sign In
                 </button>
@@ -91,7 +91,7 @@ const Nav = () => {
                 </Link>
                 <button
                   type="button"
-                  className="outline-btn"
+                  className="sign-btn"
                   onClick={() => {
                     setToggleDown(false);
                     signOut();
@@ -110,7 +110,7 @@ const Nav = () => {
                   type="button"
                   key={provider.name}
                   onClick={() => signIn(provider.id)}
-                  className="black-btn"
+                  className="sign-btn"
                 >
                   Sign In
                 </button>

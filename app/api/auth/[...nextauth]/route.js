@@ -32,7 +32,7 @@ export const authOptions = {
         return session;
       } catch (error) {
         console.error("Error fetching user:", error);
-        return session; // Return session even if an error occurs
+        return session;
       }
     },
     async signIn({ profile }) {
@@ -43,8 +43,8 @@ export const authOptions = {
         if (!userExist) {
           await User.create({
             email: profile.email,
-            username: profile.name.replace(/\s+/g, "").toLowerCase(),
-            image: profile.image,
+            username: profile.name.replace(/\s+/g, ""),
+            image: profile.picture,
           });
         }
         return true;

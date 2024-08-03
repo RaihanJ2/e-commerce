@@ -17,13 +17,6 @@ const UserSchema = new Schema(
     image: {
       type: String,
     },
-    address: {
-      type: String,
-    },
-    cart: {
-      type: Schema.Types.ObjectId,
-      ref: "Cart",
-    },
   },
   {
     timestamps: true,

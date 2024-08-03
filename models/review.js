@@ -1,15 +1,15 @@
 import { Schema, model, models } from "mongoose";
 
 const ReviewSchema = new Schema({
-  productId: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    ref: "Product",
-  },
   userId: {
     type: Schema.Types.ObjectId,
     required: true,
     ref: "User",
+  },
+  productId: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: "Product",
   },
   rating: {
     type: Number,
@@ -19,7 +19,7 @@ const ReviewSchema = new Schema({
     type: String,
     required: true,
   },
-  createAt: {
+  createdAt: {
     type: Date,
     default: Date.now,
   },
@@ -28,6 +28,8 @@ const ReviewSchema = new Schema({
     default: Date.now,
   },
 });
+
+ReviewSchema.index({ userId: 1, productId: 1 }, { unique: true });
 
 const Review = models.Review || model("Review", ReviewSchema);
 

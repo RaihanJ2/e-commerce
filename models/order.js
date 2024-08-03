@@ -30,6 +30,11 @@ const OrderSchema = new Schema({
     type: Number,
     required: true,
   },
+  addressId: {
+    type: Schema.Types.ObjectId,
+    ref: "Address",
+    required: true,
+  },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

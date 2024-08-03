@@ -1,37 +1,53 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import axios from "axios";
 import Loading from "@app/loading";
-import { set } from "mongoose";
-import Review from "@components/Review";
+import Review from "@app/Review/page";
+import Recommendations from "@components/Recommendations";
 
 export default function ProductDetail({ params }) {
   const { id } = params;
   const [product, setProduct] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("");
 
   useEffect(() => {
+    let isMounted = true;
     const fetchProduct = async () => {
       try {
         const res = await axios.get(`/api/product/${id}`);
-        setProduct(res.data);
-        if (res.data.size.length === 1) {
-          setSelectedSize(res.data.size[0]);
+        if (isMounted) {
+          setProduct(res.data);
+
+          const recRes = await axios.get(`/api/recommendations`);
+          const recData = recRes.data.recommendations[id] || [];
+          setRecommendations(recData);
+
+          if (res.data.size.length === 1) {
+            setSelectedSize(res.data.size[0]);
+          }
         }
       } catch (error) {
-        console.error("Error fetching product:", error);
+        if (isMounted) {
+          console.error("Error fetching product:", error);
+        }
       }
     };
-
     fetchProduct();
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
 
-  if (!product) {
-    return <Loading />;
-  }
+  /**BUTTON HANDLER */
+
   const handleAddToCart = async () => {
+    if (!selectedSize) {
+      alert("Please select a size before adding to cart.");
+      return;
+    }
     try {
       await axios.post("/api/cart", {
         productId: product._id,
@@ -46,14 +62,14 @@ export default function ProductDetail({ params }) {
       alert("Failed to add item to cart.");
     }
   };
-  const handleQuantity = (newQuantity) => {
+  const handleQuantity = useCallback((newQuantity) => {
     if (newQuantity > 0) {
       setQuantity(newQuantity);
     }
-  };
-  const handleSizeClick = (size) => {
+  }, []);
+  const handleSizeClick = useCallback((size) => {
     setSelectedSize(size);
-  };
+  }, []);
   const formatPrice = (price) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -62,10 +78,16 @@ export default function ProductDetail({ params }) {
       .format(price)
       .replace("Rp", "Rp.");
   };
-
+  /**LOADING */
+  if (!product) {
+    return <Loading />;
+  }
   return (
     <>
-      <section key={product.id} className="flex flex-row p-8">
+      <section
+        key={product.id}
+        className="flex flex-row flex-center w-full m-4 px-4 py-8 rounded-xl bg-white text-tertiary"
+      >
         <div className="flex flex-col items-center md:flex-row gap-4">
           <Image
             src={`/${product.images}`}
@@ -73,11 +95,13 @@ export default function ProductDetail({ params }) {
             width={500}
             height={500}
           />
-          <div className="flex flex-col px-8 w-2/3 ml-10">
+          <div className="flex flex-col px-8 w-2/3 ml-10 gap-4">
             <h1 className="text-2xl font-bold">{product.name}</h1>
 
             {product.description.map((desc, index) => (
-              <p key={index}>{desc}</p>
+              <p className="font-medium text-lg" key={index}>
+                {desc}
+              </p>
             ))}
 
             {product.size.length === 1 ? (
@@ -91,10 +115,10 @@ export default function ProductDetail({ params }) {
                   <button
                     key={index}
                     onClick={() => handleSizeClick(size)}
-                    className={`p-2 border rounded ${
+                    className={`p-2 border-2 rounded hover:scale-105 duration-75 ${
                       selectedSize === size
-                        ? "bg-gray-300 border-black"
-                        : "bg-white"
+                        ? "bg-main text-white"
+                        : "border-main bg-white text-tertiary"
                     }`}
                   >
                     {size}
@@ -107,13 +131,13 @@ export default function ProductDetail({ params }) {
                 <button
                   onClick={() => handleQuantity(quantity - 1)}
                   data-action="decrement"
-                  className="bg-gray-300 text-gray-600 hover:text-gray-700 hover:bg-gray-400 h-full w-20 rounded-l cursor-pointer outline-none "
+                  className="bg-tertiary text-white hover:opacity-80 h-full w-20 rounded-l cursor-pointer outline-none "
                 >
                   <span className="m-auto text-2xl font-thin">-</span>
                 </button>
                 <input
                   type="number"
-                  className="outline-none focus:outline-none text-center w-full bg-gray-300 font-semibold text-md hover:text-black focus:text-black md:text-base cursor-default flex items-center justify-center text-gray-900  "
+                  className="outline-none focus:outline-none text-center w-full bg-tertiary font-semibold text-md md:text-base cursor-default flex items-center justify-center text-white  "
                   name="custom-input-number"
                   value={quantity}
                   readOnly
@@ -121,7 +145,7 @@ export default function ProductDetail({ params }) {
                 <button
                   onClick={() => handleQuantity(quantity + 1)}
                   data-action="increment"
-                  className="bg-gray-300 text-gray-600 hover:text-gray-700 hover:bg-gray-400 h-full w-20 rounded-r cursor-pointer outline-none "
+                  className="bg-tertiary text-white hover:opacity-80 h-full w-20 rounded-r cursor-pointer outline-none "
                 >
                   <span className="m-auto text-2xl font-thin">+</span>
                 </button>
@@ -129,10 +153,12 @@ export default function ProductDetail({ params }) {
             </div>
 
             <div className="">
-              <p className="my-4">{formatPrice(quantity * product.price)}</p>
+              <p className="my-4 text-2xl font-bold">
+                {formatPrice(quantity * product.price)}
+              </p>
               <button
                 onClick={handleAddToCart}
-                className=" bg-black text-white py-2 px-4 rounded"
+                className=" bg-main text-white py-2 px-4 rounded hover:scale-105 duration-75"
               >
                 Add to Cart
               </button>
@@ -140,8 +166,9 @@ export default function ProductDetail({ params }) {
           </div>
         </div>
       </section>
-      <section className="w-full">
-        <Review />
+      <Recommendations recommendations={recommendations} />
+      <section className="w-full py-8">
+        <Review productId={product._id} />
       </section>
     </>
   );

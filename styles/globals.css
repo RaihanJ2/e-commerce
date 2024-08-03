@@ -1,10 +1,7 @@
+@import url("https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* 
-  Note: The styles for this gradient grid background is heavily inspired by the creator of this amazing site (https://dub.sh) – all credits go to them! 
-*/
 
 .main {
   width: 100vw;
@@ -14,16 +11,6 @@
   justify-content: center;
   padding: 120px 24px 160px 24px;
   pointer-events: none;
-}
-
-.main:before {
-  background: radial-gradient(circle, rgba(2, 0, 36, 0) 0, #fafafa 100%);
-  position: absolute;
-  content: "";
-  z-index: 2;
-  width: 100%;
-  height: 100%;
-  top: 0;
 }
 
 .main:after {
@@ -36,30 +23,8 @@
   opacity: 0.4;
   filter: invert(1);
 }
-
-.gradient {
-  height: fit-content;
-  z-index: 3;
-  width: 100%;
-  max-width: 640px;
-  background-image: radial-gradient(
-      at 27% 37%,
-      hsla(215, 98%, 61%, 1) 0px,
-      transparent 0%
-    ),
-    radial-gradient(at 97% 21%, hsla(125, 98%, 72%, 1) 0px, transparent 50%),
-    radial-gradient(at 52% 99%, hsla(354, 98%, 61%, 1) 0px, transparent 50%),
-    radial-gradient(at 10% 29%, hsla(256, 96%, 67%, 1) 0px, transparent 50%),
-    radial-gradient(at 97% 96%, hsla(38, 60%, 74%, 1) 0px, transparent 50%),
-    radial-gradient(at 33% 50%, hsla(222, 67%, 73%, 1) 0px, transparent 50%),
-    radial-gradient(at 79% 53%, hsla(343, 68%, 79%, 1) 0px, transparent 50%);
-  position: absolute;
-  content: "";
-  width: 100%;
-  height: 100%;
-  filter: blur(100px) saturate(150%);
-  top: 80px;
-  opacity: 0.15;
+.font-sans {
+  font-family: "Didact Gothic", sans-serif;
 }
 
 @media screen and (max-width: 640px) {
@@ -74,7 +39,7 @@
   --b: 8px;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: #514b82;
+  background: #fff;
   -webkit-mask: repeating-conic-gradient(
       #0000 0deg,
       #000 1deg 70deg,
@@ -96,16 +61,30 @@
 }
 
 /* Tailwind Styles */
-
+.bg-main {
+  background-color: #79a4ab;
+}
+.text-main {
+  color: #79a4ab;
+}
+.text-secondary {
+  color: #3a4042;
+}
+.text-tertiary {
+  color: #50717b;
+}
+.bg-tertiary {
+  background-color: #50717b;
+}
 .app {
   @apply relative z-10 flex justify-center items-center flex-col max-w-7xl mx-auto sm:px-10 px-6;
 }
 
-.black-btn {
-  @apply rounded-full border border-black bg-black py-1.5 px-5 text-white transition-all hover:bg-white hover:text-black text-center text-sm flex items-center justify-center;
+.sign-btn {
+  @apply rounded-full border border-white p-2 text-white hover:scale-110 duration-150 ease-in-out transition-all text-center text-sm flex items-center justify-center;
 }
 .cart-btn {
-  @apply rounded-full border border-black bg-black p-3 text-white transition-all hover:bg-white hover:text-black text-center text-sm flex items-center justify-center;
+  @apply rounded-full border border-white p-3 text-white hover:scale-110 duration-150 ease-in-out transition-all text-center text-sm flex items-center justify-center;
 }
 
 .outline-btn {
@@ -130,14 +109,6 @@
 
 .desc {
   @apply mt-5 text-lg text-gray-600 sm:text-xl max-w-2xl;
-}
-
-.search_input {
-  @apply block w-full rounded-md border border-gray-200 bg-white py-2.5 pl-5 pr-12 text-sm shadow-lg font-medium focus:border-black focus:outline-none focus:ring-0;
-}
-
-.copy_btn {
-  @apply w-7 h-7 rounded-full bg-white/10 shadow-[inset_10px_-50px_94px_0_rgb(199,199,199,0.2)] backdrop-blur flex justify-center items-center cursor-pointer;
 }
 
 .glassmorphism {
@@ -185,5 +156,5 @@
 }
 
 .footer {
-  @apply container h-1/4 px-8 border-4 border-b-0 rounded-tl-2xl rounded-tr-2xl border-black;
+  @apply container h-1/4 px-8 border-4 border-b-0 rounded-tl-2xl rounded-tr-2xl bg-black border-white;
 }

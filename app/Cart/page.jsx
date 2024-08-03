@@ -1,22 +1,25 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
+import { FaTrashAlt } from "react-icons/fa";
+import Address from "@components/Address";
 
 const Cart = () => {
   const { data: session } = useSession();
   const [cart, setCart] = useState([]);
+  const [selectedAddress, setSelectedAddress] = useState(null);
 
-  const fetchCart = async () => {
+  const fetchCart = useCallback(async () => {
     try {
       const res = await axios.get("/api/cart");
       setCart(res.data.items || []);
     } catch (error) {
       console.error(error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (session) {
@@ -38,15 +41,22 @@ const Cart = () => {
   }, [session]);
 
   const handleCheckout = async () => {
+    if (!selectedAddress) {
+      alert("Please select an address");
+      return;
+    }
     try {
-      const response = await axios.post("api/order", { items: cart });
+      const response = await axios.post("api/order", {
+        items: cart,
+        addressId: selectedAddress._id,
+      });
 
       const { transactionToken } = response.data;
       if (window.snap && window.snap.pay) {
         window.snap.pay(transactionToken, {
-          onSuccess: function (result) {
+          onSuccess: async function (result) {
             console.log("Payment success:", result);
-            // Handle successful payment here
+            await axios.delete("/api/cart");
           },
           onPending: function (result) {
             console.log("Payment pending:", result);
@@ -121,7 +131,7 @@ const Cart = () => {
 
   return (
     <>
-      <section className="w-full mt-2 py-5 sm:py-7 bg-black text-white rounded">
+      <section className="w-full mt-2 py-5 sm:py-7 bg-white text-main rounded">
         <div className="text-center container max-w-screen-xl mx-auto px-4">
           <h2 className="text-3xl font-semibold mb-2">Item(s) in Cart</h2>
         </div>
@@ -131,11 +141,14 @@ const Cart = () => {
           <div className="flex flex-col md:flex-row gap-4">
             <main className="md:w-3/4">
               {cart.length === 0 ? (
-                <div className="flex items-center justify-center h-full">
+                <div className="flex items-center justify-center h-full text-white">
                   <div className="text-center">
                     <p className="text-2xl font-bold">Your cart is empty</p>
                     {session ? (
-                      <Link href="/" className="text-blue-600 hover:underline">
+                      <Link
+                        href="/"
+                        className="text-green- opacity-80 hover:underline"
+                      >
                         Continue shopping
                       </Link>
                     ) : (
@@ -148,7 +161,7 @@ const Cart = () => {
               ) : (
                 cart.map((product) => (
                   <article
-                    className="border border-gray-200 bg-white shadow-sm rounded mb-8 pb-3 sm:p-4 lg:p-10"
+                    className="border border-gray-200 bg-white text-tertiary shadow-sm rounded mb-8 pb-3 sm:p-4 lg:p-10"
                     key={`${product.productId}-${product.size.join(",")}`}
                   >
                     <div className="flex justify-evenly items-center gap-16">
@@ -195,13 +208,13 @@ const Cart = () => {
                                 product.quantity - 1
                               )
                             }
-                            className="bg-gray-300 text-gray-600 hover:text-gray-700 hover:bg-gray-400 h-full w-20 rounded-l cursor-pointer outline-none"
+                            className="bg-tertiary text-white hover:opacity-80 h-full w-20 rounded-l cursor-pointer outline-none"
                           >
                             <span className="m-auto text-2xl font-thin">-</span>
                           </button>
                           <input
                             type="number"
-                            className="outline-none focus:outline-none text-center w-full bg-gray-300 font-semibold text-md hover:text-black focus:text-black md:text-base cursor-default flex items-center justify-center text-gray-900"
+                            className="outline-none focus:outline-none text-center bg-tertiary w-full bg-gray-300 font-semibold text-md hover:opacity-80 md:text-base cursor-default flex items-center justify-center text-white"
                             value={product.quantity}
                             readOnly
                           />
@@ -213,7 +226,7 @@ const Cart = () => {
                                 product.quantity + 1
                               )
                             }
-                            className="bg-gray-300 text-gray-600 hover:text-gray-700 hover:bg-gray-400 h-full w-20 rounded-r cursor-pointer outline-none"
+                            className="bg-tertiary text-white hover:opacity-80 h-full w-20 rounded-r cursor-pointer outline-none"
                           >
                             <span className="m-auto text-2xl font-thin">+</span>
                           </button>
@@ -224,7 +237,7 @@ const Cart = () => {
                           onClick={() => handleRemove(product.productId)}
                           className="px-4 py-2 inline-block text-red-600 bg-red-100 border border-transparent rounded-md hover:bg-red-200"
                         >
-                          Remove
+                          <FaTrashAlt />
                         </button>
                       </div>
                     </div>
@@ -232,15 +245,15 @@ const Cart = () => {
                 ))
               )}
             </main>
-            <aside className=" flex-center w-full md:w-2/4">
-              <div className="w-full shadow-sm border border-gray-200">
+            <aside className=" flex-col flex-center w-full md:w-2/4 text-white">
+              <div className="w-full shadow-sm border rounded-md border-gray-200">
                 <div className="p-5">
                   <article className="text-center md:text-left">
                     <h6 className="text-lg font-semibold mt-4">
                       Order Summary
                     </h6>
                   </article>
-                  <ul className="text-gray-600 py-2">
+                  <ul className="py-2">
                     <li className="flex justify-between py-2">
                       <span>SubTotal price:</span>
                       <span>{formatPrice(subTotal)}</span>
@@ -261,12 +274,14 @@ const Cart = () => {
                   <hr className="my-4" />
                   <button
                     onClick={handleCheckout}
-                    className="px-4 py-3 inline-block text-lg w-full text-center font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700"
+                    className="px-4 py-3 inline-block text-lg w-full text-center font-medium text-main bg-white border border-transparent rounded-md hover:scale-105 duration-75"
                   >
                     Checkout
                   </button>
                 </div>
               </div>
+
+              <Address onSelectAddress={setSelectedAddress} />
             </aside>
           </div>
         </div>

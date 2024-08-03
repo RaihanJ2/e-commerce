@@ -1,107 +1,128 @@
-from app\Cart\page.jsx
+from app\api\review\route.js
+
+import Review from "@models/review";
+import { connectDB } from "@utils/db";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route";
+
+const sessionId = async () => {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    throw new Error("Not authenticated");
+  }
+  return session.user.id;
+};
+
+export const GET = async (req) => {
+  try {
+    await connectDB();
+    const { searchParams } = new URL(req.url);
+    const productId = searchParams.get("productId");
+
+    const reviews = productId
+      ? await Review.find({ productId }).populate("userId, name")
+      : await Review.find().populate("userId, name");
+
+    return new Response(JSON.stringify(reviews), { status: 200 });
+  } catch (error) {
+    console.error("Failed to fetch reviews", error);
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
+      status: 500,
+    });
+  }
+};
+
+export const POST = async (req) => {
+  try {
+    await connectDB();
+    const userId = await sessionId();
+    const { productId, rating, review } = await req.json();
+
+    const newReview = new Review({
+      userId,
+      productId,
+      rating,
+      review,
+    });
+
+    await newReview.save();
+    return new Response(JSON.stringify(newReview), { status: 200 });
+  } catch (error) {
+    console.error("Failed to create review", error);
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
+      status: 500,
+    });
+  }
+};
+
+
+
+from app\detail\[id]\page.jsx
 
 "use client";
-import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import Image from "next/image";
 import axios from "axios";
+import Loading from "@app/loading";
+import Reviews from "@components/Review";
 
-const Cart = () => {
-  const { data: session } = useSession();
-  const [cart, setCart] = useState([]);
-
-  const fetchCart = async () => {
-    try {
-      const res = await axios.get("/api/cart");
-      setCart(res.data.items || []);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+export default function ProductDetail({ params }) {
+  const { id } = params;
+  const [product, setProduct] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+  const [selectedSize, setSelectedSize] = useState("");
 
   useEffect(() => {
-    if (session) {
-      fetchCart();
-    }
-    const script = document.createElement("script");
-    script.src = "https://app.sandbox.midtrans.com/snap/snap.js";
-    script.setAttribute("data-client-key", "YOUR_SANDBOX_CLIENT_KEY");
-
-    script.onload = () => {
-      console.log("Snap.js loaded successfully");
-    };
-
-    script.onerror = () => {
-      console.error("Failed to load Snap.js");
-    };
-
-    document.head.appendChild(script);
-  }, [session]);
-
-  const handleCheckout = async () => {
-    try {
-      const response = await axios.post("api/order", { items: cart });
-
-      const { transactionToken } = response.data;
-      if (window.snap && window.snap.pay) {
-        window.snap.pay(transactionToken, {
-          onSuccess: function (result) {
-            console.log("Payment success:", result);
-            // Handle successful payment here
-          },
-          onPending: function (result) {
-            console.log("Payment pending:", result);
-            // Handle pending payment here
-          },
-          onError: function (result) {
-            console.error("Payment error:", result);
-            // Handle payment error here
-          },
-          onClose: function () {
-            console.log("Payment popup closed");
-            // Handle popup close here
-          },
-        });
-      } else {
-        console.error("Snap.js is not loaded");
-        alert("Failed to initialize payment");
+    let isMounted = true;
+    const fetchProduct = async () => {
+      try {
+        const res = await axios.get(`/api/product/${id}`);
+        if (isMounted) {
+          setProduct(res.data);
+          if (res.data.size.length === 1) {
+            setSelectedSize(res.data.size[0]);
+          }
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error("Error fetching product:", error);
+        }
       }
-    } catch (error) {
-      console.error("Failed to checkout", error);
-      alert("Failed to checkout");
+    };
+    fetchProduct();
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
+  /**BUTTON HANDLER */
+
+  const handleAddToCart = async () => {
+    if (!selectedSize) {
+      alert("Please select a size before adding to cart.");
+      return;
     }
-  };
-
-  const handleRemove = async (productId) => {
     try {
-      const product = cart.find((item) => item.productId === productId);
-
-      await axios.delete("/api/cart", {
-        data: {
-          productId,
-          size: product.size.join(","),
-        },
+      await axios.post("/api/cart", {
+        productId: product._id,
+        name: product.name,
+        size: selectedSize,
+        quantity: quantity,
+        images: product.images,
+        price: product.price,
       });
-      fetchCart();
     } catch (error) {
-      console.error("Failed to remove item", error);
+      console.error("Failed to add item to cart", error);
+      alert("Failed to add item to cart.");
     }
   };
-
-  const handleQuantity = async (productId, size, newQuantity) => {
-    try {
-      if (newQuantity > 0) {
-        await axios.put("/api/cart", {
-          productId,
-          size,
-          quantity: newQuantity,
-        });
-        fetchCart();
-      }
-    } catch (error) {
-      console.error("Failed to update item quantity", error);
+  const handleQuantity = (newQuantity) => {
+    if (newQuantity > 0) {
+      setQuantity(newQuantity);
     }
+  };
+  const handleSizeClick = (size) => {
+    setSelectedSize(size);
   };
   const formatPrice = (price) => {
     return new Intl.NumberFormat("id-ID", {
@@ -111,271 +132,202 @@ const Cart = () => {
       .format(price)
       .replace("Rp", "Rp.");
   };
-
-  const subTotal = cart.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  );
-  const totalUnits = cart.reduce((total, item) => total + item.quantity, 0);
-
-  const PPN = subTotal * 0.05;
-  const total = subTotal + PPN;
-
+  /**LOADING */
+  if (!product) {
+    return <Loading />;
+  }
   return (
     <>
-      <section className="w-full py-5 sm:py-7 bg-blue-100">
-        <div className="text-center container max-w-screen-xl mx-auto px-4">
-          <h2 className="text-3xl font-semibold mb-2">Item(s) in Cart</h2>
-        </div>
-      </section>
-      <section className="w-full py-10">
-        <div className="container max-w-screen-xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <main className="md:w-3/4">
-              {cart.length === 0 ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold">Your cart is empty</p>
-                    {session ? (
-                      <Link href="/" className="text-blue-600 hover:underline">
-                        Continue shopping
-                      </Link>
-                    ) : (
-                      <p className="text-lg mt-4">
-                        Sign in to see the items in your cart
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                cart.map((product) => (
-                  <article
-                    className="border border-gray-200 bg-white shadow-sm rounded mb-8 pb-3 sm:p-4 lg:p-10"
-                    key={`${product.productId}-${product.size.join(",")}`}
-                  >
-                    <div className="flex justify-evenly items-center gap-16">
-                      <div className="w-full lg:w-2/5 xl:w-2/4">
-                        <figure className="flex leading-5">
-                          <div>
-                            <div className="block w-16 h-16 rounded border border-gray-200 flex-center">
-                              <Image
-                                src={`/${product.images}`}
-                                alt={product.name}
-                                width={100}
-                                height={100}
-                                className=""
-                              />
-                            </div>
-                          </div>
-                          <figcaption className="w-full ml-3 flex-evenly">
-                            <div className="">
-                              <p>
-                                <Link
-                                  href={`/detail/${product.productId}`}
-                                  className="hover:text-blue-600 pr-4 text-base sm:text-sm"
-                                >
-                                  {product.name}
-                                </Link>
-                              </p>
-                              <p className="text-gray-600 text-sm sm:text-xs">
-                                {product.size.join(", ")}
-                              </p>
-                            </div>
-                            <p className="font-semibold not-italic flex flex-row">
-                              {formatPrice(product.price)}{" "}
-                            </p>
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div className="w-24 flex-center">
-                        <div className="flex flex-row h-10 w-full rounded-lg relative bg-transparent mt-1">
-                          <button
-                            onClick={() =>
-                              handleQuantity(
-                                product.productId,
-                                product.size.join(","),
-                                product.quantity - 1
-                              )
-                            }
-                            className="bg-gray-300 text-gray-600 hover:text-gray-700 hover:bg-gray-400 h-full w-20 rounded-l cursor-pointer outline-none"
-                          >
-                            <span className="m-auto text-2xl font-thin">-</span>
-                          </button>
-                          <input
-                            type="number"
-                            className="outline-none focus:outline-none text-center w-full bg-gray-300 font-semibold text-md hover:text-black focus:text-black md:text-base cursor-default flex items-center justify-center text-gray-900"
-                            value={product.quantity}
-                            readOnly
-                          />
-                          <button
-                            onClick={() =>
-                              handleQuantity(
-                                product.productId,
-                                product.size.join(","),
-                                product.quantity + 1
-                              )
-                            }
-                            className="bg-gray-300 text-gray-600 hover:text-gray-700 hover:bg-gray-400 h-full w-20 rounded-r cursor-pointer outline-none"
-                          >
-                            <span className="m-auto text-2xl font-thin">+</span>
-                          </button>
-                        </div>
-                      </div>
-                      <div className="leading-5">
-                        <button
-                          onClick={() => handleRemove(product.productId)}
-                          className="px-4 py-2 inline-block text-red-600 bg-red-100 border border-transparent rounded-md hover:bg-red-200"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                ))
-              )}
-            </main>
-            <aside className=" flex-center w-full md:w-2/4">
-              <div className="w-full shadow-sm border border-gray-200">
-                <div className="p-5">
-                  <article className="text-center md:text-left">
-                    <h6 className="text-lg font-semibold mt-4">
-                      Order Summary
-                    </h6>
-                  </article>
-                  <ul className="text-gray-600 py-2">
-                    <li className="flex justify-between py-2">
-                      <span>SubTotal price:</span>
-                      <span>{formatPrice(subTotal)}</span>
-                    </li>
-                    <li className="flex justify-between py-2">
-                      <span>Quantity:</span>
-                      <span>{totalUnits} item(s)</span>
-                    </li>
-                    <li className="flex justify-between py-2">
-                      <span>PPN:</span>
-                      <span>{formatPrice(PPN)}</span>
-                    </li>
-                    <li className="text-lg font-semibold border-t flex flex-between pt-2">
-                      <span>Total price:</span>
-                      <span>{formatPrice(total)}</span>
-                    </li>
-                  </ul>
-                  <hr className="my-4" />
-                  <button
-                    onClick={handleCheckout}
-                    className="px-4 py-3 inline-block text-lg w-full text-center font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700"
-                  >
-                    Checkout
-                  </button>
-                </div>
+      <section key={product.id} className="flex flex-row p-8">
+        <div className="flex flex-col items-center md:flex-row gap-4">
+          <Image
+            src={`/${product.images}`}
+            alt={product.name}
+            width={500}
+            height={500}
+          />
+          <div className="flex flex-col px-8 w-2/3 ml-10 gap-4">
+            <h1 className="text-2xl font-bold">{product.name}</h1>
+
+            {product.description.map((desc, index) => (
+              <p key={index}>{desc}</p>
+            ))}
+
+            {product.size.length === 1 ? (
+              <div>
+                <p>Size: {product.size[0]} </p>
+                <input type="hidden" value={product.size[0]} readOnly />
               </div>
-            </aside>
+            ) : (
+              <div className="flex gap-2">
+                {product.size.map((size, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleSizeClick(size)}
+                    className={`p-2 border rounded ${
+                      selectedSize === size
+                        ? "bg-black text-white"
+                        : "border-black bg-white text-black"
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="w-24">
+              <div className="flex flex-row h-10 w-full rounded-lg relative bg-transparent mt-1">
+                <button
+                  onClick={() => handleQuantity(quantity - 1)}
+                  data-action="decrement"
+                  className="bg-gray-300 text-gray-600 hover:text-gray-700 hover:bg-gray-400 h-full w-20 rounded-l cursor-pointer outline-none "
+                >
+                  <span className="m-auto text-2xl font-thin">-</span>
+                </button>
+                <input
+                  type="number"
+                  className="outline-none focus:outline-none text-center w-full bg-gray-300 font-semibold text-md hover:text-black focus:text-black md:text-base cursor-default flex items-center justify-center text-gray-900  "
+                  name="custom-input-number"
+                  value={quantity}
+                  readOnly
+                />
+                <button
+                  onClick={() => handleQuantity(quantity + 1)}
+                  data-action="increment"
+                  className="bg-gray-300 text-gray-600 hover:text-gray-700 hover:bg-gray-400 h-full w-20 rounded-r cursor-pointer outline-none "
+                >
+                  <span className="m-auto text-2xl font-thin">+</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="">
+              <p className="my-4">{formatPrice(quantity * product.price)}</p>
+              <button
+                onClick={handleAddToCart}
+                className=" bg-black text-white py-2 px-4 rounded"
+              >
+                Add to Cart
+              </button>
+            </div>
           </div>
         </div>
       </section>
+      <Reviews productId={id} />
     </>
+  );
+}
+
+
+from components\Review.jsx
+
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+
+const Reviews = ({ productId }) => {
+  const [reviews, setReviews] = useState([]);
+  const [newReview, setNewReview] = useState({ rating: 0, review: "" });
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const res = await axios.get(`/api/review?productId=${productId}`);
+        setReviews(res.data);
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      }
+    };
+    fetchReviews();
+  }, [productId]);
+
+  const handleSubmit = async () => {
+    e.preventDefault();
+    try {
+      await axios.post(`/api/review`, {
+        productId,
+        rating: newReview.rating,
+        review: newReview.review,
+      });
+      setNewReview({ rating: 0, review: "" });
+    } catch (error) {
+      console.error("Failed to add review", error);
+    }
+  };
+
+  return (
+    <div>
+      <h2>Reviews</h2>
+      <ul>
+        {reviews.map((review) => (
+          <li key={review._id}>
+            {review.comment} - {review.rating} stars
+          </li>
+        ))}
+      </ul>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="number"
+          value={newReview.rating}
+          onChange={(e) =>
+            setNewReview({ ...newReview, rating: e.target.value })
+          }
+          min="1"
+          max="5"
+          required
+        />
+        <textarea
+          value={newReview.comment}
+          onChange={(e) =>
+            setNewReview({ ...newReview, comment: e.target.value })
+          }
+          required
+        />
+        <button type="submit">Submit Review</button>
+      </form>
+    </div>
   );
 };
 
-export default Cart;
+export default Reviews;
 
-
-
-from app\_document.js
-
-import Document, { Html, Head, Main, NextScript } from "next/document";
-
-class MyDocument extends Document {
-  render() {
-    return (
-      <Html lang="en">
-        <Head>
-          <script
-            src="https://app.sandbox.midtrans.com/snap/snap.js"
-            data-client-key={process.env.MIDTRANS_CLIENT_KEY}
-          ></script>
-        </Head>
-        <body>
-          <Main />
-          <NextScript />
-        </body>
-      </Html>
-    );
-  }
-}
-
-export default MyDocument;
-
-
-from utils\midtrans.js
-
-import Midtrans from "midtrans-client";
-
-const snap = new Midtrans.Snap({
-  isProduction: false,
-  serverKey: process.env.MIDTRANS_SERVER_KEY,
-  clientKey: process.env.MIDTRANS_CLIENT_KEY,
-});
-
-export const createTransaction = async (orderId, grossAmount) => {
-  const parameter = {
-    transaction_details: {
-      order_id: orderId,
-      gross_amount: grossAmount,
-    },
-  };
-  try {
-    const transaction = await snap.createTransaction(parameter);
-    return transaction;
-  } catch (error) {
-    throw new Error(`Failed to create transaction: ${error.message}`);
-  }
-};
-
-from models\order.js
+from models\review.js
 
 import { Schema, model, models } from "mongoose";
 
-const OrderSchema = new Schema({
+const ReviewSchema = new Schema({
   userId: {
     type: Schema.Types.ObjectId,
     required: true,
     ref: "User",
   },
-  items: [
-    {
-      productId: {
-        type: Schema.Types.ObjectId,
-        required: true,
-      },
-      quantity: {
-        type: Number,
-        required: true,
-      },
-      price: {
-        type: Number,
-        required: true,
-      },
-      totalAmount: {
-        type: Number,
-        required: true,
-      },
-    },
-  ],
-  totalAmount: {
+  productId: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: "Product",
+  },
+  rating: {
     type: Number,
     required: true,
   },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
+  review: {
+    type: String,
+    required: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
-const Order = models.Order || model("Order", OrderSchema);
+const Review = models.Review || model("Review", ReviewSchema);
 
-export default Order;
+export default Review;
 
 from models\user.js
-
 import { Schema, models, model } from "mongoose";
 
 const UserSchema = new Schema(
@@ -411,164 +363,3 @@ const UserSchema = new Schema(
 const User = models.User || model("User", UserSchema);
 
 export default User;
-
-from models\cart.js
-
-import { Schema, model, models } from "mongoose";
-
-const CartSchema = new Schema({
-  userId: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    ref: "User",
-  },
-  items: [
-    {
-      productId: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: "Product",
-      },
-      name: {
-        type: String,
-        required: true,
-      },
-      size: {
-        type: [String],
-        required: true,
-      },
-      quantity: {
-        type: Number,
-        required: true,
-      },
-      images: {
-        type: String,
-        required: true,
-      },
-      price: {
-        type: Number,
-        required: true,
-      },
-    },
-  ],
-  createAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
-
-const Cart = models.Cart || model("Cart", CartSchema);
-
-export default Cart;
-
-from models\product.js
-
-import { Schema, model, models } from "mongoose";
-
-const ProductSchema = new Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  description: {
-    type: [String],
-    required: true,
-  },
-  price: {
-    type: Number,
-    required: true,
-  },
-  images: {
-    type: String,
-    required: true,
-  },
-  category: {
-    type: String,
-    required: true,
-    enum: {
-      values: ["Clothes", "Accessories"],
-    },
-  },
-  size: {
-    type: [String],
-    required: true,
-  },
-  stock: {
-    type: Number,
-    required: true,
-  },
-  ratings: {
-    type: Number,
-  },
-});
-
-const Product = models.Product || model("Product", ProductSchema);
-
-export default Product;
-
-
-from pages\api\order.js
-
-import { connectDB } from "@utils/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
-import { createTransaction } from "@utils/midtrans";
-import Order from "@models/order";
-
-const sessionId = async () => {
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    throw new Error("Not authenticated");
-  }
-  return session.user.id;
-};
-
-export const POST = async (req) => {
-  await connectDB();
-
-  try {
-    const userId = await sessionId();
-    const { items } = await req.json();
-
-    const updatedItems = items.map((item) => ({
-      ...item,
-      totalAmount: item.price * item.quantity,
-    }));
-
-    let totalAmount = updatedItems.reduce(
-      (sum, item) => sum + item.totalAmount,
-      0
-    );
-
-    const order = await Order.create({
-      userId,
-      items: updatedItems,
-      totalAmount,
-    });
-
-    const transaction = await createTransaction(
-      order._id.toString(),
-      totalAmount
-    );
-
-    return new Response(
-      JSON.stringify({
-        order,
-        transactionToken: transaction.token,
-      }),
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error("Failed to create order:", error);
-    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
-      status: 500,
-    });
-  }
-};
-
-
-how do i fill the order detail in midtrans (customer details and product details)
