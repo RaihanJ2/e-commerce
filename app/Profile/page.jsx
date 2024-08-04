@@ -25,7 +25,7 @@ export default function Profile() {
         )}
         <div className="flex-col flex justify-center">
           <p>{session?.user?.id}</p>
-          <p>{session.user.name}</p>
+          <p>{session?.user?.name}</p>
           <p>{session?.user?.email}</p>
         </div>
       </div>

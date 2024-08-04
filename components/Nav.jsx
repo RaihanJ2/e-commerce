@@ -78,40 +78,40 @@ const Nav = () => {
         </Link>
         {session?.user ? (
           <div className="relative flex items-center gap-2">
-            {session.user.image ? (
-              <Image
-                src={session.user.image}
-                width={37}
-                height={37}
-                className="rounded-full border-2 border-white"
-                alt="Profile picture"
-              />
-            ) : (
-              <FaUser
-                className="text-xl rounded-full border-2 border-white w-8 h-8 p-1 bg-main text-white"
-                alt="User icon"
-              />
-            )}
-            <button
-              type="button"
-              className="p-2"
-              onClick={() => setToggleDown((prev) => !prev)}
-              aria-label="Toggle menu"
-            >
-              <FaUser className="text-xl text-white" />
-            </button>
+            <div className="relative">
+              {session.user.image ? (
+                <Image
+                  src={session.user.image}
+                  width={37}
+                  height={37}
+                  className="rounded-full border-2 border-white"
+                  alt="Profile picture"
+                />
+              ) : (
+                <FaUser
+                  className="text-xl rounded-full border-2 border-white w-8 h-8 p-1 bg-main text-white"
+                  alt="User icon"
+                />
+              )}
+              <button
+                type="button"
+                className="p-2 absolute right-0 top-0 w-full h-full"
+                onClick={() => setToggleDown((prev) => !prev)}
+                aria-label="Toggle menu"
+              ></button>
+            </div>
             {toggleDown && (
               <div className="absolute top-full right-0 mt-2 w-48 bg-white border rounded shadow-lg">
                 <Link
                   href="/Profile"
-                  className="block px-4 py-2 hover:bg-gray-100"
+                  className="flex flex-center px-4 py-2 hover:bg-gray-100 w-full"
                   onClick={() => setToggleDown(false)}
                 >
                   Profile
                 </Link>
                 <button
                   type="button"
-                  className="sign-btn"
+                  className="block px-4 py-2 hover:bg-gray-100 w-full"
                   onClick={() => {
                     setToggleDown(false);
                     signOut();

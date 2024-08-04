@@ -68,7 +68,7 @@ const Address = ({ onSelectAddress }) => {
   return (
     <section className="shadow-sm mt-4 p-4 border w-full flex-center flex-col rounded-md border-gray-200">
       <h6 className="text-lg font-semibold p-4">Address</h6>
-      <div className="grid md:grid-cols-2 sm:grid-cols-3 grid-cols-2 gap-8 transition-all duration-100 ease-in-out">
+      <div className="grid md:grid-cols-1 lg:grid-cols-2 sm:grid-cols-1 grid-cols-1 gap-8 transition-all duration-100 ease-in-out">
         {isFormVisible ? (
           <div className="w-full p-4 border flex flex-col flex-start border-gray-300 rounded-md">
             <h6 className="text-lg font-semibold mb-4">Add New Address</h6>

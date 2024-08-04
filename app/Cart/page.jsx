@@ -138,8 +138,8 @@ const Cart = () => {
       </section>
       <section className="w-full py-10">
         <div className="container max-w-screen-xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <main className="md:w-3/4">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <main className="w-full">
               {cart.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-white">
                   <div className="text-center">
@@ -174,7 +174,7 @@ const Cart = () => {
                                 alt={product.name}
                                 width={100}
                                 height={100}
-                                className=""
+                                className="object-none sm:object-contain"
                               />
                             </div>
                           </div>
@@ -245,7 +245,7 @@ const Cart = () => {
                 ))
               )}
             </main>
-            <aside className=" flex-col flex-center w-full md:w-2/4 text-white">
+            <aside className=" flex-col flex-center w-full lg:w-2/4 text-white">
               <div className="w-full shadow-sm border rounded-md border-gray-200">
                 <div className="p-5">
                   <article className="text-center md:text-left">

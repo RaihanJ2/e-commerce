@@ -83,7 +83,7 @@ export default function ProductDetail({ params }) {
         key={product.id}
         className="flex flex-row flex-center w-full m-4 px-4 py-8 rounded-xl bg-white text-tertiary"
       >
-        <div className="flex flex-col items-center md:flex-row gap-4">
+        <div className="flex flex-col items-center lg:flex-row gap-4">
           <Image
             src={`/${product.images}`}
             alt={product.name}
