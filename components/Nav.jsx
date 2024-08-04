@@ -26,7 +26,13 @@ const Nav = () => {
   return (
     <nav className="w-full px-6 py-3 border-4 border-t-0 rounded-bl-2xl rounded-br-2xl border-b-white flex justify-between items-center">
       <Link href="/" className="text-white font-bold">
-        NAVBAR
+        <Image
+          src="/logo.png"
+          width={100}
+          height={100}
+          alt="Logo"
+          className="cursor-pointer"
+        />
       </Link>
 
       {/* Desktop Navigation */}
