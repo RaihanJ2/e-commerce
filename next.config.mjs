@@ -3,13 +3,15 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ["mongoose"],
   },
-  basePath: "/e-commerce", // Replace with your repository name
-  assetPrefix: "/e-commerce/", // Replace with your repository name
   images: {
-    domains: ["lh3.googleusercontent.com"], // Specify domains for images
-    // remotePatterns is deprecated, use domains instead
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+    ],
   },
-  webpack(config, { webpack }) {
+  webpack(config) {
     config.experiments = {
       ...config.experiments,
       topLevelAwait: true,
@@ -18,4 +20,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;
