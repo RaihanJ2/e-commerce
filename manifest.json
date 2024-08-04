@@ -1,22 +1,12 @@
 {
-  "name": "Hello Kids!",
-  "short_name": "Hello Kids!",
-  "description": "For the babies and kids",
-  "icons": [
-    {
-      "src": "/logo.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "/logo.png",
-      "type": "image/png",
-      "sizes": "512x512"
-    }
-  ],
-  "start_url": "/",
-  "background_color": "#ffffff",
+  "background_color": "#79a4ab",
+  "description": "e-commerce",
+  "dir": "ltr",
   "display": "standalone",
+  "name": "Hello Kids!",
+  "orientation": "any",
   "scope": "/",
-  "theme_color": "#000000"
+  "short_name": "Hello Kids!",
+  "start_url": "/",
+  "theme_color": "#50717b"
 }
