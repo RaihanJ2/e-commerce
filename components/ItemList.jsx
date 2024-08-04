@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 const ItemList = () => {
   const [products, setProducts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [displayProducts, setDisplayProducts] = useState(8);
+
   const fetchProducts = async () => {
     try {
       const res = await axios.get("/api/product");
@@ -30,17 +32,22 @@ const ItemList = () => {
 
   const handleCategory = (category) => {
     setSelectedCategory(category);
+    setDisplayProducts(8);
   };
 
   const categories = Array.from(
     new Set(products.map((product) => product.category))
   );
 
-  // Filter products by the selected category
   const filteredProducts = selectedCategory
     ? products.filter((product) => product.category === selectedCategory)
     : products;
 
+  const productsToDisplay = filteredProducts.slice(0, displayProducts);
+
+  const loadMore = () => {
+    setDisplayProducts(displayProducts + 8);
+  };
   if (!products) {
     <Loading />;
   }
@@ -72,7 +79,7 @@ const ItemList = () => {
         ))}
       </section>
       <section className="grid md:grid-cols-4 sm:grid-cols-3 grid-cols-2 gap-8 p-4 mt-4 mb-8 ">
-        {filteredProducts.map((product) => (
+        {productsToDisplay.map((product) => (
           <Link
             key={product._id}
             href={`/detail/${product._id}`}
@@ -83,7 +90,7 @@ const ItemList = () => {
               alt={product.name}
               width={300}
               height={300}
-              className="max-h-80 object-scale-down mb-28 sm:mb-22 p-4"
+              className="max-h-72 object-scale-down mb-28 sm:mb-22 p-4"
             />
             <div className="flex flex-col font-sans bg-main text-white font-bold md:text-xl text-md p-4 text-center gap-2 absolute bottom-0 left-0 right-0">
               <h1>{product.name}</h1>
@@ -92,6 +99,16 @@ const ItemList = () => {
           </Link>
         ))}
       </section>
+      {productsToDisplay.length < filteredProducts.length && (
+        <div className="flex flex-center">
+          <button
+            onClick={loadMore}
+            className="p-2 mb-6 rounded text-white font-sans hover:scale-105 border-4 duration-75 font-semibold"
+          >
+            Show More
+          </button>
+        </div>
+      )}
     </>
   );
 };

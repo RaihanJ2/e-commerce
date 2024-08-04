@@ -32,7 +32,7 @@ const Nav = () => {
       {/* Desktop Navigation */}
       <div className="hidden sm:flex items-center gap-2">
         <Link href="/Cart" aria-label="View cart">
-          <FaShoppingCart className="cart-btn" />
+          <FaShoppingCart className="cart-btn font-bold" />
         </Link>
         {session?.user ? (
           <div className="flex items-center gap-3 md:gap-5">
@@ -74,7 +74,7 @@ const Nav = () => {
       {/* Mobile Navigation */}
       <div className="sm:hidden flex items-center gap-2 relative">
         <Link href="/Cart" aria-label="View cart">
-          <FaShoppingCart className="cart-btn" />
+          <FaShoppingCart className="cart-btn font-bold" />
         </Link>
         {session?.user ? (
           <div className="relative flex items-center gap-2">

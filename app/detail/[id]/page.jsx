@@ -5,6 +5,7 @@ import axios from "axios";
 import Loading from "@app/loading";
 import Review from "@app/Review/page";
 import { FaStar } from "react-icons/fa6";
+import Recommendations from "@components/Recommendations";
 
 export default function ProductDetail({ params }) {
   const { id } = params;
@@ -36,7 +37,7 @@ export default function ProductDetail({ params }) {
     };
   }, [id]);
 
-  /**BUTTON HANDLER */
+  /** BUTTON HANDLERS **/
 
   const handleAddToCart = async () => {
     if (!selectedSize) {
@@ -57,26 +58,30 @@ export default function ProductDetail({ params }) {
       alert("Failed to add item to cart.");
     }
   };
+
   const handleQuantity = useCallback((newQuantity) => {
     if (newQuantity > 0) {
       setQuantity(newQuantity);
     }
   }, []);
+
   const handleSizeClick = useCallback((size) => {
     setSelectedSize(size);
   }, []);
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
       currency: "IDR",
-    })
-      .format(price)
-      .replace("Rp", "Rp.");
+    }).format(price);
   };
-  /**LOADING */
+
+  /** LOADING STATE **/
+
   if (!product) {
     return <Loading />;
   }
+
   return (
     <>
       <section
@@ -89,6 +94,7 @@ export default function ProductDetail({ params }) {
             alt={product.name}
             width={500}
             height={500}
+            className="max-h-[30rem] w-auto"
           />
           <div className="flex flex-col px-8 w-2/3 ml-10 gap-4">
             <h1 className="text-2xl font-bold">{product.name}</h1>
@@ -168,6 +174,10 @@ export default function ProductDetail({ params }) {
             </div>
           </div>
         </div>
+      </section>
+      <section>
+        {/* Pass the correct product ID to the Recommendations component */}
+        <Recommendations productId={id} />
       </section>
       <section className="w-full py-8">
         <Review productId={product._id} />
