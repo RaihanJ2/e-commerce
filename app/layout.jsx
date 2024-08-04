@@ -1,5 +1,5 @@
 import Footer from "@components/Footer";
-import Nav from "@components/nav";
+import Nav from "@components/Nav";
 import "@styles/globals.css";
 import Provider from "@components/Provider";
 import React from "react";
