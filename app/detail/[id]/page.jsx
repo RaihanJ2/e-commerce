@@ -175,8 +175,7 @@ export default function ProductDetail({ params }) {
           </div>
         </div>
       </section>
-      <section>
-        {/* Pass the correct product ID to the Recommendations component */}
+      <section className="w-full">
         <Recommendations productId={id} />
       </section>
       <section className="w-full py-8">

@@ -18,6 +18,18 @@ export const GET = async (req) => {
     await connectDB();
     const { searchParams } = new URL(req.url);
     const productId = searchParams.get("productId");
+    const checkPurchase = searchParams.get("checkPurchase");
+
+    if (checkPurchase) {
+      const userId = await getSessionUserId();
+      const userOrder = await Order.findOne({
+        userId,
+        "items.productId": productId,
+      });
+
+      const hasPurchased = !!userOrder;
+      return new Response(JSON.stringify({ hasPurchased }), { status: 200 });
+    }
 
     const reviews = productId
       ? await Review.find({ productId }).populate({
@@ -66,15 +78,10 @@ export const POST = async (req) => {
 
     const reviews = await Review.find({ productId });
 
-    if (reviews.length === 0) {
-      return new Response(
-        JSON.stringify({ message: "No reviews found for this product" }),
-        { status: 404 }
-      );
-    }
-
     const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-    const avgRating = totalRating / reviews.length;
+    const firstAvg = totalRating / reviews.length;
+    const roundedFirstAvg = firstAvg.toFixed(2);
+    const avgRating = parseFloat(roundedFirstAvg);
 
     await Product.findByIdAndUpdate(productId, { avgRatings: avgRating });
 

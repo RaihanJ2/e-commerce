@@ -1,18 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { FaStar, FaUser } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
 const ReviewForm = ({ productId }) => {
   const { data: session } = useSession();
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  /** EVENT HANDLER */
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkPurchaseStatus = async () => {
+      try {
+        const res = await axios.get(
+          `/api/review?productId=${productId}&checkPurchase=true`
+        );
+        setHasPurchased(res.data.hasPurchased);
+      } catch (error) {
+        console.error("Failed to check purchase status", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (session) {
+      checkPurchaseStatus();
+    }
+  }, [session, productId]);
 
   const handleRating = (value) => {
     setRating(value);
@@ -21,6 +43,7 @@ const ReviewForm = ({ productId }) => {
   const handleHoverRating = (value) => {
     setHoverRating(value);
   };
+
   const handleOffRating = () => {
     setHoverRating(0);
   };
@@ -37,12 +60,16 @@ const ReviewForm = ({ productId }) => {
       setRating(0);
       setReviewText("");
       console.log("Review submitted:", res.data);
+      router.push(`/detail/${productId}`);
+      window.location.reload();
     } catch (error) {
       console.error("Failed to submit review", error);
     }
   };
 
-  return (
+  if (loading) return <div>Loading...</div>;
+
+  return hasPurchased ? (
     <form
       onSubmit={handleSubmit}
       className="w-full flex flex-col rounded-md bg-black py-4 px-8"
@@ -52,7 +79,7 @@ const ReviewForm = ({ productId }) => {
           {session?.user.image ? (
             <Image
               src={session?.user.image}
-              alt={session?.user.username}
+              alt={session?.user.name}
               width={60}
               height={60}
               className="rounded-full object-contain"
@@ -98,6 +125,10 @@ const ReviewForm = ({ productId }) => {
         </button>
       </div>
     </form>
+  ) : (
+    <div className="p-6 rounded-md bg-white text-3xl text-main font-bold flex-center">
+      You can only leave a review if you have purchased this product.
+    </div>
   );
 };
 

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
+import Loading from "@app/loading";
 
 const Recommendations = ({ productId }) => {
   const [recommendedProducts, setRecommendedProducts] = useState([]);
@@ -23,6 +24,7 @@ const Recommendations = ({ productId }) => {
 
     fetchRecommendations();
   }, [productId]);
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -31,14 +33,23 @@ const Recommendations = ({ productId }) => {
       .format(price)
       .replace("Rp", "Rp.");
   };
-  if (loading) return <p>Loading recommendations...</p>;
-  if (error) return <p>{error}</p>;
+
+  // Filter the top 4 recommended products
+  const topRecommendedProducts = recommendedProducts.slice(0, 4);
+
+  if (loading) return <Loading />;
+  if (error)
+    return (
+      <p className="p-6 rounded-md bg-white text-2xl text-main font-bold flex-center">
+        {error}
+      </p>
+    );
 
   return (
-    <div>
-      <h2>Recommended Products</h2>
-      <div className="grid md:grid-cols-4 sm:grid-cols-3 grid-cols-2 gap-8 p-4 mt-4 mb-8 ">
-        {recommendedProducts.map((product) => (
+    <div className="flex-center flex-col">
+      <h2 className="text-white text-2xl font-bold">Recommended Products</h2>
+      <div className="grid md:grid-cols-4 sm:grid-cols-3 grid-cols-2 gap-8 p-4 mt-4 mb-8">
+        {topRecommendedProducts.map((product) => (
           <Link
             key={product._id}
             href={`/detail/${product._id}`}

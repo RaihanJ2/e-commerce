@@ -1,24 +1,23 @@
-import createNextPlugin from "next-pwa";
-
-const withPWA = createNextPlugin();
-
-export default withPWA({
-  pwa: {
-    dest: "public",
-    disable: process.env.NODE_ENV === "development",
-  },
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   experimental: {
-    serverComponents: true,
     serverComponentsExternalPackages: ["mongoose"],
   },
   images: {
-    domains: ["lh3.googleusercontent.com"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+    ],
   },
-  webpack(config, { isServer }) {
+  webpack(config) {
     config.experiments = {
       ...config.experiments,
       topLevelAwait: true,
     };
     return config;
   },
-});
+};
+
+export default nextConfig;
