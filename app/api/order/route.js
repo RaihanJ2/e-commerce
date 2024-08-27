@@ -64,15 +64,22 @@ export const POST = async (req) => {
       address
     );
 
-    await clearCart(userId);
-
-    return new Response(
-      JSON.stringify({
-        order,
-        transactionToken: transaction.token,
-      }),
-      { status: 200 }
-    );
+    // If transaction creation is successful, clear the cart
+    if (transaction && transaction.token) {
+      await clearCart(userId);
+      return new Response(
+        JSON.stringify({
+          order,
+          transactionToken: transaction.token,
+        }),
+        { status: 200 }
+      );
+    } else {
+      // If the transaction was not successful, respond with an error
+      return new Response(JSON.stringify({ error: "Transaction failed" }), {
+        status: 500,
+      });
+    }
   } catch (error) {
     console.error("Failed to create order:", error);
     return new Response(JSON.stringify({ error: "Internal Server Error" }), {

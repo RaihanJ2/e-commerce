@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import ReviewList from "@components/ReviewList";
-import ReviewForm from "@components/ReviewFrom";
+import ReviewForm from "@components/ReviewForm";
 
 const Review = ({ productId }) => {
   const [reviews, setReviews] = useState([]);

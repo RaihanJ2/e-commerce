@@ -7,18 +7,8 @@ export const GET = async () => {
 
     const products = await Product.find({});
 
-    return new Response(JSON.stringify(products), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return new Response(JSON.stringify(products), { status: 200 });
   } catch (error) {
-    return new Response("Failed to fetch all products", {
-      status: 500,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return new Response("Failed to fetch all products", { status: 500 });
   }
 };

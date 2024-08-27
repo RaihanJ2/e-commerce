@@ -1,29 +1,31 @@
+"use client";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
 import Loading from "@app/loading";
 
-const Recommendations = ({ productId }) => {
+const Recommendations = () => {
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchRecommendations = async () => {
+    const fetchRec = async () => {
       try {
-        const response = await axios.get(`/api/recommendations/${productId}`);
-        setRecommendedProducts(response.data);
-      } catch (err) {
-        setError("Failed to load recommendations");
-        console.error("Error fetching recommendations:", err);
+        const res = await axios.get("/api/recommendations");
+        setRecommendedProducts(res.data);
+        setLoading(false);
+      } catch (error) {
+        setError("Failed to fetch recommendations");
+        setLoading(false);
       } finally {
+        setError("");
         setLoading(false);
       }
     };
-
-    fetchRecommendations();
-  }, [productId]);
+    fetchRec();
+  }, []);
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat("id-ID", {
@@ -34,9 +36,6 @@ const Recommendations = ({ productId }) => {
       .replace("Rp", "Rp.");
   };
 
-  // Filter the top 4 recommended products
-  const topRecommendedProducts = recommendedProducts.slice(0, 4);
-
   if (loading) return <Loading />;
   if (error)
     return (
@@ -44,10 +43,12 @@ const Recommendations = ({ productId }) => {
         {error}
       </p>
     );
-
+  const topRecommendedProducts = recommendedProducts.slice(0, 4);
   return (
-    <div className="flex-center flex-col">
-      <h2 className="text-white text-2xl font-bold">Recommended Products</h2>
+    <div className="flex-center flex-col pt-4">
+      <h2 className="text-white text-2xl font-bold border-b-2 w-full text-center pb-2">
+        Recommended Products
+      </h2>
       <div className="grid md:grid-cols-4 sm:grid-cols-3 grid-cols-2 gap-8 p-4 mt-4 mb-8">
         {topRecommendedProducts.map((product) => (
           <Link
@@ -62,6 +63,7 @@ const Recommendations = ({ productId }) => {
               height={300}
               className="max-h-80 object-scale-down mb-28 sm:mb-22 p-4"
             />
+
             <div className="flex flex-col font-sans bg-main text-white font-bold md:text-xl text-md p-4 text-center gap-2 absolute bottom-0 left-0 right-0">
               <h1>{product.name}</h1>
               <h1>{formatPrice(product.price)}</h1>

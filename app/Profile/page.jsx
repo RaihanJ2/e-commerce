@@ -1,4 +1,5 @@
 "use client";
+import Address from "@components/Address";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -11,7 +12,7 @@ export default function Profile() {
     router.push("/");
   }
   return (
-    <section className=" w-full p-4 flex flex-col justify-center items-center">
+    <section className=" w-full p-4 text-white flex flex-col justify-center items-center">
       <div className="flex flex-row w-1/2 gap-2">
         {session?.user?.image ? (
           <Image
@@ -24,11 +25,11 @@ export default function Profile() {
           <FaUser className="text-9xl border-white border-2 p-6" />
         )}
         <div className="flex-col flex justify-center">
-          <p>{session?.user?.id}</p>
           <p>{session?.user?.name}</p>
-          <p>{session?.user?.email}</p>
+          <p className="text-4xl">{session?.user?.email}</p>
         </div>
       </div>
+      <Address />
     </section>
   );
 }

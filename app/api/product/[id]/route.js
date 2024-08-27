@@ -9,23 +9,12 @@ export const GET = async (req, { params }) => {
     if (!product) {
       return new Response(JSON.stringify({ error: "Cart not found" }), {
         status: 404,
-        headers: {
-          "Content-Type": "application/json",
-        },
       });
     }
-    return new Response(JSON.stringify(product), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return new Response(JSON.stringify(product), { status: 200 });
   } catch (error) {
     return new Response(JSON.stringify({ error: "Invalid product ID" }), {
       status: 400,
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   }
 };

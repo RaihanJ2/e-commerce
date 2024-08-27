@@ -31,8 +31,21 @@ const ReviewForm = ({ productId }) => {
       }
     };
 
+    const triggerNeighborAndPrediction = async () => {
+      try {
+        await axios.post("/api/neighbor", { productId });
+        await axios.post("/api/prediction", {
+          userId: session.user.id,
+          productId,
+        });
+      } catch (error) {
+        console.error("Failed to trigger neighbor or prediction", error);
+      }
+    };
+
     if (session) {
       checkPurchaseStatus();
+      triggerNeighborAndPrediction();
     }
   }, [session, productId]);
 
@@ -57,6 +70,7 @@ const ReviewForm = ({ productId }) => {
         rating,
         review: reviewText,
       });
+
       setRating(0);
       setReviewText("");
       console.log("Review submitted:", res.data);

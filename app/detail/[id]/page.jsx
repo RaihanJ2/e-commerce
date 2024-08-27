@@ -6,12 +6,14 @@ import Loading from "@app/loading";
 import Review from "@app/Review/page";
 import { FaStar } from "react-icons/fa6";
 import Recommendations from "@components/Recommendations";
+import { useSession } from "next-auth/react";
 
 export default function ProductDetail({ params }) {
   const { id } = params;
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("");
+  const { data: session } = useSession();
 
   useEffect(() => {
     let isMounted = true;
@@ -42,6 +44,10 @@ export default function ProductDetail({ params }) {
   const handleAddToCart = async () => {
     if (!selectedSize) {
       alert("Please select a size before adding to cart.");
+      return;
+    }
+    if (!session) {
+      alert("Please sign in to add items to cart.");
       return;
     }
     try {
@@ -175,8 +181,8 @@ export default function ProductDetail({ params }) {
           </div>
         </div>
       </section>
-      <section className="w-full">
-        <Recommendations productId={id} />
+      <section className="w-full py-8">
+        <Recommendations />
       </section>
       <section className="w-full py-8">
         <Review productId={product._id} />

@@ -263,7 +263,7 @@ const Cart = () => {
                       <span>{totalUnits} item(s)</span>
                     </li>
                     <li className="flex justify-between py-2">
-                      <span>PPN:</span>
+                      <span>PPN(5%):</span>
                       <span>{formatPrice(PPN)}</span>
                     </li>
                     <li className="text-lg font-semibold border-t flex flex-between pt-2">
