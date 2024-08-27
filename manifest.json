@@ -1,4 +1,26 @@
 {
+  "display_override": ["window-controls-overlay"],
+  "protocol_handlers": [{ "protocol": "mailto", "url": "/newEmail?to=%s" }],
+  "screenshots": [
+    {
+      "src": "/screenshots/homepage.png",
+      "sizes": "1920x2572",
+      "type": "image/png",
+      "description": "Home Screen"
+    },
+    {
+      "src": "/screenshots/details.png",
+      "sizes": "1920x3974",
+      "type": "image/png",
+      "description": "Product Details"
+    },
+    {
+      "src": "/screenshots/cart.png",
+      "sizes": "2880x1487",
+      "type": "image/png",
+      "description": "Cart"
+    }
+  ],
   "background_color": "#79a4ab",
   "description": "An e-commerce site for baby products",
   "dir": "ltr",
@@ -12,13 +34,13 @@
   "categories": ["kids"],
   "icons": [
     {
-      "src": "192x192.ico",
+      "src": "192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "512x512.ico",
+      "src": "512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
