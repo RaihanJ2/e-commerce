@@ -23,5 +23,13 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Hello Kids!",
+      "url": "/",
+      "description": "untuk kebutuhan si adek",
+      "icons": [{ "src": "96x96.png", "type": "image/png", "sizes": "96x96" }]
+    }
   ]
 }
