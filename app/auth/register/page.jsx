@@ -43,7 +43,7 @@ const Page = () => {
           className="flex flex-col flex-center gap-6 h-full"
           onSubmit={handleSubmit}
         >
-          <h1 className="text-4xl text-primary-lightest font-bold mb-2">
+          <h1 className="text-3xl text-primary-lightest font-bold mb-2">
             REGISTER
           </h1>
 
