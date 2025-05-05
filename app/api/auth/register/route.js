@@ -33,7 +33,7 @@ export const POST = async (req) => {
 
     return new Response(JSON.stringify(newUser), { status: 201 });
   } catch (error) {
-    console.error("Registration error:", error); // Log detailed error
+    console.error("Registration error:", error);
     return new Response(
       JSON.stringify({
         error: "Internal Server Error",

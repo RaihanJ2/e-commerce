@@ -1,126 +1,189 @@
 "use client";
 import Loading from "@app/loading";
+import { formatPrice } from "@utils/utils";
 import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const ItemList = () => {
   const [products, setProducts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [displayProducts, setDisplayProducts] = useState(8);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchProducts = async () => {
+    setIsLoading(true);
     try {
       const res = await axios.get("/api/product");
       setProducts(res.data);
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsLoading(false);
     }
   };
+
   useEffect(() => {
     fetchProducts();
   }, []);
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-    })
-      .format(price)
-      .replace("Rp", "Rp.");
-  };
 
-  const handleCategory = (category) => {
+  const handleCategory = useCallback((category) => {
     setSelectedCategory(category);
     setDisplayProducts(8);
-  };
+  });
 
   const categories = Array.from(
     new Set(products.map((product) => product.category))
   );
 
-  const filteredProducts = selectedCategory
-    ? products.filter((product) => product.category === selectedCategory)
-    : products;
+  const filteredProducts = useMemo(() => {
+    return selectedCategory
+      ? products.filter((product) => product.category === selectedCategory)
+      : products;
+  }, [selectedCategory, products]);
 
-  const productsToDisplay = filteredProducts.slice(0, displayProducts);
+  const productsToDisplay = useMemo(
+    () => filteredProducts.slice(0, displayProducts),
+    [filteredProducts, displayProducts]
+  );
 
   const loadMore = () => {
     setDisplayProducts(displayProducts + 8);
   };
-  if (!products) {
-    <Loading />;
+
+  if (isLoading) {
+    return <Loading />;
   }
+
   return (
-    <>
-      <section className="flex flex-center gap-2 m-4">
-        <button
-          onClick={() => setSelectedCategory("")}
-          className={`p-2 border-2 rounded font-sans hover:scale-105 duration-75 ${
-            !selectedCategory
-              ? "bg-white text-main border-white"
-              : "bg-main text-white"
-          }`}
-        >
-          All
-        </button>
-        {categories.map((category) => (
+    <div className="max-w-7xl mx-auto px-4 py-4">
+      {/* Category Filter */}
+      <div className="bg-primary-light/30 backdrop-blur-sm rounded-xl p-6 mb-6">
+        <div className="flex flex-wrap gap-3">
           <button
-            key={category}
-            onClick={() => handleCategory(category)}
-            className={`p-2 border-2 rounded font-sans hover:scale-105 duration-75 ${
-              selectedCategory === category
-                ? "bg-white text-main border-white"
-                : "bg-main text-white"
+            onClick={() => setSelectedCategory("")}
+            className={`px-5 py-2 rounded-full font-medium transition-all duration-300 ${
+              !selectedCategory
+                ? "bg-primary-lightest text-primary-darkest shadow-lg"
+                : "bg-primary-dark/60 text-primary-lightest hover:bg-primary-lightest/20 border border-primary-lightest/30"
             }`}
           >
-            {category}
+            All
           </button>
-        ))}
-      </section>
-      <section className="grid md:grid-cols-4 sm:grid-cols-3 grid-cols-2 gap-8 p-4 mt-4 mb-8 ">
-        {productsToDisplay.map((product) => (
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => handleCategory(category)}
+              className={`px-5 py-2 rounded-full font-medium transition-all duration-300 ${
+                selectedCategory === category
+                  ? "bg-primary-lightest text-primary-darkest shadow-lg"
+                  : "bg-primary-dark/60 text-primary-lightest hover:bg-primary-lightest/20 border border-primary-lightest/30"
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Results Count */}
+      <div className="flex justify-between items-center mb-6">
+        <p className="text-primary-dark">
+          <span className="font-semibold">{filteredProducts.length}</span>{" "}
+          products found
+          {selectedCategory && (
+            <span>
+              {" "}
+              in <span className="italic">{selectedCategory}</span>
+            </span>
+          )}
+        </p>
+      </div>
+
+      {/* Empty State */}
+      {filteredProducts.length === 0 && (
+        <div className="text-center py-16 bg-primary-lightest/5 rounded-xl">
+          <h3 className="text-3xl font-semibold text-primary-dark mb-2">
+            No products found
+          </h3>
+          <p className="text-primary-dark/70">
+            Try selecting a different category
+          </p>
+        </div>
+      )}
+
+      {/* Product Grid */}
+      <div className="grid 2xl:grid-cols-4 xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-2 grid-cols-1 gap-6">
+        {productsToDisplay.map((product, index) => (
           <Link
             key={product._id}
             href={`/detail/${product._id}`}
-            className="relative cursor-pointer border border-white bg-white text-main hover:scale-105 transition-all rounded-md overflow-hidden"
+            className="group flex flex-col h-full bg-primary-lightest rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:translate-y-[-4px]"
           >
-            <Image
-              src={`/${product.images}`}
-              alt={product.name}
-              width={300}
-              height={300}
-              className="max-h-72 object-scale-down mb-28 sm:mb-22 p-4"
-            />
-            <div className="flex flex-col font-sans bg-main text-white font-bold md:text-xl text-md p-4 text-center gap-2 absolute bottom-0 left-0 right-0">
-              <h1>{product.name}</h1>
-
-              <h1>{formatPrice(product.price)}</h1>
+            <div className="h-56 sm:h-64 p-4 flex items-center justify-center bg-white">
+              <div className="relative w-full h-full">
+                <Image
+                  src={`/${product.images}`}
+                  alt={product.name}
+                  priority={index === 0}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  className="object-contain transition-transform duration-300 group-hover:scale-105"
+                />
+              </div>
+            </div>
+            <div className="flex flex-col items-center flex-grow bg-primary-medium text-primary-lightest p-5">
+              <h2 className="font-bold text-xl mb-2 line-clamp-2">
+                {product.name}
+              </h2>
+              <div className="mt-auto">
+                <div className="flex items-center justify-between mt-2">
+                  <p className="font-bold text-2xl text-primary-lightest">
+                    {formatPrice(product.price)}
+                  </p>
+                </div>
+              </div>
             </div>
           </Link>
         ))}
-      </section>
+      </div>
+
+      {/* Load More Button */}
       {productsToDisplay.length < filteredProducts.length && (
-        <div className="flex flex-center">
+        <div className="flex justify-center mt-12">
           <button
             onClick={loadMore}
-            className="p-2 mb-6 rounded text-white font-sans hover:scale-105 border-4 duration-75 font-semibold"
+            className="px-8 py-3 rounded-full text-primary-lightest font-bold border-2 border-primary-lightest hover:bg-primary-lightest/10 transition-all duration-300 flex items-center gap-2"
           >
-            Show More
+            <span>Show More Products</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
           </button>
         </div>
       )}
-    </>
+
+      {/* No more products note */}
+      {productsToDisplay.length === filteredProducts.length &&
+        filteredProducts.length > 0 && (
+          <div className="text-center mt-8 text-primary-dark/50 text-sm">
+            No more products to load
+          </div>
+        )}
+    </div>
   );
 };
-export async function getServerSideProps() {
-  const res = await axios.get("http://localhost:3000/api/products");
-  const products = res.data;
 
-  return {
-    props: {
-      products,
-    },
-  };
-}
 export default ItemList;

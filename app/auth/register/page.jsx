@@ -11,11 +11,14 @@ const Page = () => {
     password: "",
   });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
 
     try {
       const res = await axios.post("/api/auth/register", form);
@@ -28,52 +31,67 @@ const Page = () => {
         error.message ||
         "An unexpected error occurred.";
       setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className=" h-screen flex-center w-full">
-      <div className="border-white rounded-lg border-4 w-1/2 h-1/2">
+    <div className="h-screen flex-center w-full">
+      <div className="glassmorphism border-4 border-primary-lightest rounded-lg w-full max-w-xl p-10">
         <form
-          className="flex flex-col justify-center items-center gap-2 h-full"
+          className="flex flex-col flex-center gap-6 h-full"
           onSubmit={handleSubmit}
         >
-          <h1 className="text-white text-2xl font-bold">REGISTER</h1>
+          <h1 className="text-4xl text-primary-lightest font-bold mb-2">
+            REGISTER
+          </h1>
+
           <input
             type="text"
             name="username"
-            className="w-1/2 p-1 rounded"
+            className="w-full p-3 rounded form_input text-lg"
             placeholder="Username"
+            required
             onChange={(e) => setForm({ ...form, username: e.target.value })}
           />
+
           <input
             type="email"
             name="email"
-            className="w-1/2 p-1 rounded"
+            className="w-full p-3 rounded form_input text-lg"
             placeholder="E-mail"
+            required
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
+
           <input
             type="password"
             name="password"
-            className="w-1/2 p-1 rounded"
+            className="w-full p-3 rounded form_input text-lg"
             placeholder="Password"
+            required
             onChange={(e) => setForm({ ...form, password: e.target.value })}
           />
 
           {error && (
-            <div className="w-fit bg-red-600 text-white py-1 px-3 rounded-md mt-2">
+            <div className="w-fit bg-red-600 text-primary-lightest py-2 px-4 rounded-md mt-2 text-lg">
               {error}
             </div>
           )}
+
           <Link
             href="/auth/login"
-            className="font-bold text-white hover:scale-105 hover:underline transition-all duration-150 p-1"
+            className="font-bold text-primary-lightest hover:scale-105 hover:underline transition-all duration-150 text-lg mt-2"
           >
             Already have an account?
           </Link>
-          <button className="font-bold border-white text-white hover:scale-105 px-5 py-2 rounded border transition-all duration-200 ">
-            REGISTER
+
+          <button
+            className="sign-btn bg-primary-medium hover:bg-primary-dark w-full py-4 disabled:opacity-70 font-bold mt-2 rounded-lg"
+            disabled={loading}
+          >
+            {loading ? <div className="loading  mx-auto"></div> : "REGISTER"}
           </button>
         </form>
       </div>

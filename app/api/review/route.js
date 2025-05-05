@@ -5,7 +5,7 @@ import { authOptions } from "../auth/[...nextauth]/route";
 import Order from "@models/order";
 import Product from "@models/product";
 
-const getSessionUserId = async () => {
+const sessionId = async () => {
   const session = await getServerSession(authOptions);
   if (!session) {
     throw new Error("Not authenticated");
@@ -21,7 +21,7 @@ export const GET = async (req) => {
     const checkPurchase = searchParams.get("checkPurchase");
 
     if (checkPurchase) {
-      const userId = await getSessionUserId();
+      const userId = await sessionId();
       const userOrder = await Order.findOne({
         userId,
         "items.productId": productId,
@@ -50,7 +50,7 @@ export const GET = async (req) => {
 export const POST = async (req) => {
   try {
     await connectDB();
-    const userId = await getSessionUserId();
+    const userId = await sessionId();
     const { productId, rating, review } = await req.json();
 
     const userOrder = await Order.findOne({

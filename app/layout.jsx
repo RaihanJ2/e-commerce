@@ -11,12 +11,12 @@ export const metadata = {
 
 const RootLayout = ({ children }) => (
   <html lang="en">
-    <body className="font-sans" suppressHydrationWarning={true}>
+    <body className="font-sans min-h-screen" suppressHydrationWarning={true}>
       <Provider>
-        <div className="main bg-main"></div>
-        <main className="app bg-main">
+        <div className="main bg-primary-darkest"></div>
+        <main className="app bg-primary-darkest flex flex-col min-h-screen">
           <Nav />
-          {children}
+          <div className="flex-grow w-full">{children}</div>
           <Footer />
         </main>
       </Provider>

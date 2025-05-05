@@ -60,39 +60,57 @@
   }
 }
 
-/* Tailwind Styles */
-.bg-main {
-  background-color: #79a4ab;
+/* Updated Color Scheme */
+.bg-primary-lightest {
+  background-color: #e9edf3;
 }
-.text-main {
-  color: #79a4ab;
+.bg-primary-light {
+  background-color: #7ea7bf;
 }
-.text-secondary {
-  color: #3a4042;
+.bg-primary-medium {
+  background-color: #4d58c0;
 }
-.text-tertiary {
-  color: #50717b;
+.bg-primary-dark {
+  background-color: #6c6c90;
 }
-.bg-tertiary {
-  background-color: #50717b;
+.bg-primary-darkest {
+  background-color: #252f4e;
 }
+
+.text-primary-lightest {
+  color: #e9edf3;
+}
+.text-primary-light {
+  color: #7ea7bf;
+}
+.text-primary-medium {
+  color: #4d58c0;
+}
+.text-primary-dark {
+  color: #6c6c90;
+}
+.text-primary-darkest {
+  color: #252f4e;
+}
+
+/* Tailwind Styles with Updated Colors */
 .app {
   @apply relative z-10 flex justify-center items-center flex-col max-w-7xl mx-auto sm:px-10 px-6;
 }
 
 .sign-btn {
-  @apply rounded-full border-2 border-white p-2 text-white font-semibold hover:scale-105 text-center text-sm flex items-center justify-center;
+  @apply rounded-full border-2 border-primary-lightest p-2 text-primary-lightest font-semibold text-center text-xl flex items-center justify-center;
 }
 .cart-btn {
-  @apply rounded-full border-2 w-fit h-fit border-white p-2 text-white hover:scale-110 duration-150 ease-in-out transition-all text-center text-base flex items-center justify-center;
+  @apply rounded-full border-2 w-fit h-fit border-primary-lightest p-2 text-primary-lightest hover:scale-110 duration-150 ease-in-out transition-all text-center text-base flex items-center justify-center;
 }
 
 .outline-btn {
-  @apply rounded-full border border-black bg-transparent py-1.5 px-5 text-black transition-all hover:bg-black hover:text-white text-center text-sm flex items-center justify-center;
+  @apply rounded-full border border-primary-darkest bg-transparent py-1.5 px-5 text-primary-darkest transition-all hover:bg-primary-darkest hover:text-primary-lightest text-center text-sm flex items-center justify-center;
 }
 
 .head-text {
-  @apply mt-5 text-5xl font-extrabold leading-[1.15] text-black sm:text-6xl;
+  @apply mt-5 text-5xl font-extrabold leading-[1.15] text-primary-darkest sm:text-6xl;
 }
 
 .orange_gradient {
@@ -104,36 +122,36 @@
 }
 
 .blue_gradient {
-  @apply bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-primary-medium to-primary-light bg-clip-text text-transparent;
 }
 
 .desc {
-  @apply mt-5 text-lg text-gray-600 sm:text-xl max-w-2xl;
+  @apply mt-5 text-lg text-primary-dark sm:text-xl max-w-2xl;
 }
 
 .glassmorphism {
-  @apply rounded-xl border border-gray-200 bg-white/20 shadow-[inset_10px_-50px_94px_0_rgb(199,199,199,0.2)] backdrop-blur p-5;
+  @apply rounded-xl border border-primary-light bg-white/20 shadow-[inset_10px_-50px_94px_0_rgb(199,199,199,0.2)] backdrop-blur p-5;
 }
 
 .form_textarea {
-  @apply w-full flex rounded-lg h-[200px] mt-2 p-3 text-sm text-gray-500 outline-0;
+  @apply w-full flex rounded-lg h-[200px] mt-2 p-3 text-sm text-primary-dark outline-0;
 }
 
 .form_input {
-  @apply w-full flex rounded-lg mt-2 p-3 text-sm text-gray-500 outline-0;
+  @apply w-full flex rounded-lg mt-2 p-3 text-sm text-primary-dark outline-0;
 }
 
 /* Nav Component */
 .logo_text {
-  @apply max-sm:hidden font-semibold text-lg text-black tracking-wide;
+  @apply max-sm:hidden font-semibold text-lg text-primary-darkest tracking-wide;
 }
 
 .dropdown {
-  @apply absolute z-10 right-0 top-full mt-3 w-full p-5 rounded-lg bg-white min-w-[210px] flex flex-col gap-2 justify-end items-end;
+  @apply absolute z-10 right-0 top-full mt-3 w-full p-5 rounded-lg bg-primary-lightest min-w-[210px] flex flex-col gap-2 justify-end items-end;
 }
 
 .dropdown_link {
-  @apply text-sm text-gray-700 hover:text-gray-500 font-medium w-full text-center;
+  @apply text-sm text-primary-dark hover:text-primary-light font-medium w-full text-center;
 }
 
 .flex-center {
@@ -156,5 +174,5 @@
 }
 
 .footer {
-  @apply container h-1/4 px-8 border-4 border-b-0 rounded-tl-2xl rounded-tr-2xl bg-black border-white;
+  @apply container h-1/4 px-8 rounded-tl-2xl rounded-tr-2xl;
 }
