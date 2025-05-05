@@ -1,13 +1,33 @@
 "use client";
-
+import Loading from "@app/loading";
 import Orders from "@app/order/page";
 import Address from "@components/Address";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { FaUser, FaEnvelope, FaIdCard } from "react-icons/fa6";
 
 export default function Profile() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
+
+  // Loading state while checking session
+  if (status === "loading") {
+    return <Loading />;
+  }
+
+  // If no session, don't render the profile content
+  if (!session) {
+    return null;
+  }
 
   return (
     <section className="w-full min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 py-12 px-4 sm:px-6 lg:px-8">
@@ -69,8 +89,7 @@ export default function Profile() {
             <span>Address Information</span>
           </h2>
           <Address />
-        </div>
-        <div className="bg-gray-800 rounded-xl shadow-lg p-6">
+
           <Orders />
         </div>
       </div>

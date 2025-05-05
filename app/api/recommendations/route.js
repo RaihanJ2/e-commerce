@@ -1,8 +1,12 @@
+// app/api/recommendations/route.js
 import Product from "@/models/product";
 import Prediction from "@/models/prediction";
 import { connectDB } from "@utils/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
+
+// Add this export to force dynamic rendering
+export const dynamic = "force-dynamic";
 
 const sessionId = async () => {
   const session = await getServerSession(authOptions);
@@ -11,17 +15,15 @@ const sessionId = async () => {
   }
   return session.user.id;
 };
+
 export async function GET(req) {
   try {
     await connectDB();
     const userId = await sessionId();
-
     const predictions = await Prediction.find({ userId })
       .sort({ prediction: -1 })
       .populate("productId");
-
     const recommendProducts = predictions.map((pred) => pred.productId);
-
     return new Response(JSON.stringify(recommendProducts), {
       status: 200,
       headers: {
