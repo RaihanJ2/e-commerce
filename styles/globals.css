@@ -22,9 +22,6 @@
   opacity: 0.4;
   filter: invert(1);
 }
-.font-sans {
-  font-family: "Didact Gothic", sans-serif;
-}
 
 @media screen and (max-width: 640px) {
   .main {

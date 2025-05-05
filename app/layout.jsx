@@ -14,7 +14,7 @@ export const metadata = {
 const RootLayout = ({ children }) => (
   <html lang="en">
     <body
-      className={`${Gothic.className} font-sans min-h-screen`}
+      className={`${Gothic.className} min-h-screen`}
       suppressHydrationWarning={true}
     >
       <Provider>
