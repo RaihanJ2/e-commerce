@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import SalesDashboard from "./sales/page";
+import Loading from "@app/loading";
 
 const AdminPage = () => {
   const { data: session, status } = useSession();
@@ -22,12 +23,7 @@ const AdminPage = () => {
   }, [status, session, router]);
 
   if (status === "loading") {
-    return (
-      <div className="container mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
-        <div className="text-center">Loading...</div>
-      </div>
-    );
+    return <Loading />;
   }
 
   // Only render content if user is admin
