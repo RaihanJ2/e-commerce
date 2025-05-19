@@ -74,10 +74,3 @@ export async function POST(req) {
     );
   }
 }
-
-// Configure the API route to handle large files
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
