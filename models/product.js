@@ -28,10 +28,6 @@ const ProductSchema = new Schema({
     type: [String],
     required: true,
   },
-  stock: {
-    type: Number,
-    required: true,
-  },
   avgRatings: {
     type: Number,
   },

@@ -45,6 +45,7 @@ export const authOptions = {
 
         if (sessionUser) {
           session.user.id = sessionUser._id.toString();
+          session.user.role = sessionUser.role; // Add role to session
         } else {
           console.warn("User not found in database:", session.user.email);
         }
