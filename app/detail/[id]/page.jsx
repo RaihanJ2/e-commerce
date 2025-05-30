@@ -7,7 +7,7 @@ import Review from "@app/Review/page";
 import { FaStar } from "react-icons/fa6";
 import Recommendations from "@components/Recommendations";
 import { useSession } from "next-auth/react";
-import { formatPrice } from "@utils/utils";
+import { formatPrice, getImageUrl } from "@utils/utils";
 
 export default function ProductDetail({ params }) {
   const { id } = params;
@@ -105,7 +105,7 @@ export default function ProductDetail({ params }) {
           {/* Product Image */}
           <div className="md:w-1/2 flex-center p-8">
             <Image
-              src={`/${product.images}`}
+              src={`${getImageUrl(product.images)}`}
               alt={product.name}
               width={500}
               height={500}

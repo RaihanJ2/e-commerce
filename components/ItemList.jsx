@@ -1,6 +1,6 @@
 "use client";
 import Loading from "@app/loading";
-import { formatPrice } from "@utils/utils";
+import { formatPrice, getImageUrl } from "@utils/utils";
 import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
@@ -124,7 +124,7 @@ const ItemList = () => {
             <div className="h-56 sm:h-64 p-4 flex items-center justify-center bg-white">
               <div className="relative w-full h-full">
                 <Image
-                  src={`/${product.images}`}
+                  src={`${getImageUrl(product.images)}`}
                   alt={product.name}
                   priority={index === 0}
                   fill

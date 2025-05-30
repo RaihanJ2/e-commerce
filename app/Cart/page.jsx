@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import axios from "axios";
 import { FaTrashAlt } from "react-icons/fa";
 import Address from "@components/Address";
-import { formatPrice } from "@utils/utils";
+import { formatPrice, getImageUrl } from "@utils/utils";
 
 const Cart = () => {
   const { data: session } = useSession();
@@ -189,7 +189,7 @@ const Cart = () => {
                       <div className="flex items-center space-x-4">
                         <div className="block w-20 h-20  flex-center m-2">
                           <Image
-                            src={`/${product.images}`}
+                            src={`${getImageUrl(product.images)}`}
                             alt={product.name}
                             width={100}
                             height={100}

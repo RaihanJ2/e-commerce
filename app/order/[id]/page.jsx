@@ -1,6 +1,6 @@
 "use client";
 import Loading from "@app/loading";
-import { formatDate, formatPrice } from "@utils/utils";
+import { formatDate, formatPrice, getImageUrl } from "@utils/utils";
 import axios from "axios";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -125,7 +125,7 @@ const OrderDetails = ({ params }) => {
                   {item.productImage && (
                     <div className="w-16 h-16 flex-shrink-0">
                       <Image
-                        src={`/${item.productImage}`}
+                        src={`${getImageUrl(item.productImage)}`}
                         alt={item.productName || "Product"}
                         width={64}
                         height={64}

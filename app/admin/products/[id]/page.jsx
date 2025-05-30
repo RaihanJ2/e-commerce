@@ -7,6 +7,7 @@ import Image from "next/image";
 import axios from "axios";
 import Loading from "@app/loading";
 import { FaTrashAlt } from "react-icons/fa";
+import { getImageUrl } from "@utils/utils";
 
 const EditProductPage = () => {
   const { data: session, status } = useSession();
@@ -148,12 +149,6 @@ const EditProductPage = () => {
       // Scroll to top to show error message
       window.scrollTo(0, 0);
     }
-  };
-
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return "/placeholder-product.jpg";
-    if (imagePath.startsWith("http")) return imagePath;
-    return imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
   };
 
   if (loading) {

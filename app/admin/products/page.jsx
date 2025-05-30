@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { FaGear } from "react-icons/fa6";
 import { FaTrashAlt } from "react-icons/fa";
-import { formatPrice } from "@utils/utils";
+import { formatPrice, getImageUrl } from "@utils/utils";
 import axios from "axios";
 import { AddProductModal } from "@components/ProductFormModals";
 import Loading from "@app/loading";
@@ -100,12 +100,6 @@ const AdminProductsPage = () => {
           (err.response?.data?.message || err.message)
       );
     }
-  };
-
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return "/placeholder-product.jpg";
-    if (imagePath.startsWith("http")) return imagePath;
-    return imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
   };
 
   if (loading) {

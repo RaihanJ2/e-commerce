@@ -14,3 +14,9 @@ export const formatDate = (dateString) => {
     day: "numeric",
   });
 };
+
+export const getImageUrl = (imagePath) => {
+  if (!imagePath) return "/placeholder-product.jpg";
+  if (imagePath.startsWith("http")) return imagePath;
+  return imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
+};
