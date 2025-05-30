@@ -2,11 +2,9 @@ import Review from "@models/review";
 import Neighbor from "@models/neighbor";
 import { connectDB } from "@utils/db";
 
-/** CALCULATE COSINE SIMILARITY */
-const calculateCosineSimilarity = (productReviews, otherProductReviews) => {
+const calculateSimilarity = (productReviews, otherProductReviews) => {
   const ratings = {};
 
-  // Build the ratings object
   [...productReviews, ...otherProductReviews].forEach((review) => {
     const key = review.userId.toString();
     if (!ratings[key]) ratings[key] = {};
@@ -42,7 +40,6 @@ export async function POST(req) {
   try {
     await connectDB();
 
-    // Extract productId from request body
     const { productId } = await req.json();
 
     if (!productId) {
@@ -51,7 +48,6 @@ export async function POST(req) {
       });
     }
 
-    // Fetch reviews for the given product
     const productReviews = await Review.find({ productId }).populate("userId");
     if (!productReviews.length) {
       return new Response(
@@ -60,19 +56,17 @@ export async function POST(req) {
       );
     }
 
-    // Fetch all distinct products to compare with
     const allProductIds = await Review.distinct("productId");
     const otherProductIds = allProductIds.filter(
       (id) => id.toString() !== productId.toString()
     );
 
-    // Calculate similarity for each product
     const similarities = [];
     for (const otherProductId of otherProductIds) {
       const otherProductReviews = await Review.find({
         productId: otherProductId,
       }).populate("userId");
-      const similarity = calculateCosineSimilarity(
+      const similarity = calculateSimilarity(
         productReviews,
         otherProductReviews
       );
@@ -82,11 +76,9 @@ export async function POST(req) {
       }
     }
 
-    // Sort by similarity in descending order and take top N
     similarities.sort((a, b) => b.similarity - a.similarity);
-    const topNeighbors = similarities.slice(0, 20); // Adjust the number of top neighbors if needed
+    const topNeighbors = similarities.slice(0, 20);
 
-    // Update the Neighbor model
     await Neighbor.findOneAndUpdate(
       { productId },
       { neighbors: topNeighbors },

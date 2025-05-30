@@ -1,11 +1,9 @@
-// app/api/recommendations/route.js
 import Product from "@/models/product";
 import Prediction from "@/models/prediction";
 import { connectDB } from "@utils/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 
-// Add this export to force dynamic rendering
 export const dynamic = "force-dynamic";
 
 const sessionId = async () => {

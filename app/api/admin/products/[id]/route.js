@@ -4,7 +4,6 @@ import Product from "@models/product";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@app/api/auth/[...nextauth]/route";
 
-// Middleware to check admin permissions
 async function sessionId() {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "admin") {
@@ -13,7 +12,6 @@ async function sessionId() {
   return true;
 }
 
-// GET - Retrieve a specific product by ID
 export async function GET(req, { params }) {
   try {
     if (!(await sessionId())) {
@@ -45,7 +43,6 @@ export async function GET(req, { params }) {
   }
 }
 
-// PUT - Update a product by ID
 export async function PUT(req, { params }) {
   try {
     if (!(await sessionId())) {
@@ -58,9 +55,8 @@ export async function PUT(req, { params }) {
     const { id } = params;
     const data = await req.json();
 
-    await connectToDatabase();
+    await connectDB();
 
-    // Convert price to number if it's a string
     if (data.price && typeof data.price === "string") {
       data.price = parseFloat(data.price);
     }
@@ -88,7 +84,6 @@ export async function PUT(req, { params }) {
   }
 }
 
-// DELETE - Remove a product by ID
 export async function DELETE(req, { params }) {
   try {
     if (!(await sessionId())) {
@@ -100,7 +95,7 @@ export async function DELETE(req, { params }) {
 
     const { id } = params;
 
-    await connectToDatabase();
+    await connectDB();
     const deletedProduct = await Product.findByIdAndDelete(id);
 
     if (!deletedProduct) {

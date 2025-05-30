@@ -23,7 +23,6 @@ const clearCart = async (userId) => {
   }
 };
 
-// GET handler for retrieving user orders
 export const GET = async (req) => {
   try {
     await connectDB();
@@ -54,7 +53,6 @@ export const GET = async (req) => {
   }
 };
 
-//POST handler for creating new orders
 export const POST = async (req) => {
   try {
     await connectDB();
@@ -75,7 +73,6 @@ export const POST = async (req) => {
       );
     }
 
-    // Calculate item totals and order total
     const updatedItems = items.map((item) => ({
       ...item,
       totalAmount: item.price * item.quantity,
@@ -86,11 +83,9 @@ export const POST = async (req) => {
       0
     );
 
-    // Calculate PPN (tax) at 5%
     const ppnAmount = Math.round(subTotal * 0.05);
     const totalAmount = subTotal + ppnAmount;
 
-    // Get user and address details
     const user = await User.findById(userId);
     const address = await Address.findById(addressId);
 
@@ -106,7 +101,6 @@ export const POST = async (req) => {
       );
     }
 
-    // Create the order
     const order = await Order.create({
       userId,
       items: updatedItems,
@@ -116,14 +110,12 @@ export const POST = async (req) => {
       addressId,
     });
 
-    // Prepare customer details for payment
     const customerDetails = {
       name: user.name,
       email: user.email,
       phoneNo: address.phoneNo,
     };
 
-    // Create transaction with Midtrans
     const transaction = await createTransaction(
       order._id.toString(),
       totalAmount,
@@ -148,7 +140,6 @@ export const POST = async (req) => {
         }
       );
     } else {
-      // If the transaction was not successful, respond with an error
       return new Response(JSON.stringify({ error: "Transaction failed" }), {
         status: 500,
         headers: {

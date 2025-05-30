@@ -6,18 +6,15 @@ import { writeFile } from "fs/promises";
 import { join } from "path";
 import { v4 as uuidv4 } from "uuid";
 
-// This defines the maximum file size (5MB)
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 export async function POST(req) {
   try {
-    // Check authentication
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "admin") {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // Parse the multipart form data
     const formData = await req.formData();
     const file = formData.get("file");
 
@@ -28,7 +25,6 @@ export async function POST(req) {
       );
     }
 
-    // Check file type
     const fileType = file.type;
     if (!fileType.startsWith("image/")) {
       return NextResponse.json(
@@ -37,7 +33,6 @@ export async function POST(req) {
       );
     }
 
-    // Check file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
         { message: "File size exceeds 5MB limit" },
@@ -45,24 +40,18 @@ export async function POST(req) {
       );
     }
 
-    // Get file extension
     const fileExtension = fileType.split("/")[1];
 
-    // Generate a unique filename
     const fileName = `${uuidv4()}.${fileExtension}`;
 
-    // Create the uploads directory path
-    const uploadsDir = join(process.cwd(), "public", "uploads");
+    const uploadsDir = join(process.cwd(), "public");
 
-    // Convert the file to a buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Write the file to the public directory
     const filePath = join(uploadsDir, fileName);
     await writeFile(filePath, buffer);
 
-    // Return the URL to the uploaded file
     const fileUrl = `/uploads/${fileName}`;
 
     return NextResponse.json({ url: fileUrl }, { status: 201 });

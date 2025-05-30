@@ -4,7 +4,6 @@ import Product from "@models/product";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@app/api/auth/[...nextauth]/route";
 
-// Middleware to check admin permissions
 async function sessionId() {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "admin") {
@@ -13,7 +12,6 @@ async function sessionId() {
   return true;
 }
 
-// GET - Retrieve all products
 export async function GET(req) {
   try {
     if (!(await sessionId())) {
@@ -49,7 +47,6 @@ export async function POST(req) {
     await connectDB();
     const data = await req.json();
 
-    // Basic validation
     if (
       !data.name ||
       !data.price ||
@@ -64,12 +61,10 @@ export async function POST(req) {
       );
     }
 
-    // Convert price to number if it's a string
     if (typeof data.price === "string") {
       data.price = parseFloat(data.price);
     }
 
-    // Create new product
     const product = new Product({
       name: data.name,
       price: data.price,
