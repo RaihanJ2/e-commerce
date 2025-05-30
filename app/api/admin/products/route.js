@@ -34,7 +34,6 @@ export async function GET(req) {
   }
 }
 
-// POST - Create a new product
 export async function POST(req) {
   try {
     if (!(await sessionId())) {

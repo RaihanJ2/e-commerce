@@ -1,4 +1,3 @@
-// app/api/upload/route.js
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
@@ -41,7 +40,6 @@ export async function POST(req) {
     }
 
     const fileExtension = fileType.split("/")[1];
-
     const fileName = `${uuidv4()}.${fileExtension}`;
 
     const uploadsDir = join(process.cwd(), "public");
@@ -52,7 +50,8 @@ export async function POST(req) {
     const filePath = join(uploadsDir, fileName);
     await writeFile(filePath, buffer);
 
-    const fileUrl = `/uploads/${fileName}`;
+    // Return the URL path without uploads folder
+    const fileUrl = `/${fileName}`;
 
     return NextResponse.json({ url: fileUrl }, { status: 201 });
   } catch (error) {
