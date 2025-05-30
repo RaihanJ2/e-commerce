@@ -31,7 +31,7 @@ const ItemList = () => {
   const handleCategory = useCallback((category) => {
     setSelectedCategory(category);
     setDisplayProducts(8);
-  });
+  }, []);
 
   const categories = Array.from(
     new Set(products.map((product) => product.category))
@@ -119,9 +119,11 @@ const ItemList = () => {
           <Link
             key={product._id}
             href={`/detail/${product._id}`}
-            className="group flex flex-col h-full bg-primary-lightest rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:translate-y-[-4px]"
+            className={`group flex flex-col h-full bg-primary-lightest rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:translate-y-[-4px] ${
+              product.isOutOfStock ? "opacity-75" : ""
+            }`}
           >
-            <div className="h-56 sm:h-64 p-4 flex items-center justify-center bg-white">
+            <div className="h-56 sm:h-64 p-4 flex items-center justify-center bg-white relative">
               <div className="relative w-full h-full">
                 <Image
                   src={`${getImageUrl(product.images)}`}
@@ -129,14 +131,32 @@ const ItemList = () => {
                   priority={index === 0}
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  className="object-contain transition-transform duration-300 group-hover:scale-105"
+                  className={`object-contain transition-transform duration-300 group-hover:scale-105 ${
+                    product.isOutOfStock ? "grayscale" : ""
+                  }`}
                 />
               </div>
+
+              {/* Stock Status Badges */}
+              {product.isOutOfStock && (
+                <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                  Out of Stock
+                </div>
+              )}
             </div>
+
             <div className="flex flex-col items-center flex-grow bg-primary-medium text-primary-lightest p-5">
-              <h2 className="font-bold text-xl mb-2 line-clamp-2">
+              <h2 className="font-bold text-xl mb-2 line-clamp-2 text-center">
                 {product.name}
               </h2>
+
+              {/* Stock Information */}
+              <div className="text-sm text-primary-lightest/80 mb-2">
+                {product.isOutOfStock
+                  ? "Out of Stock"
+                  : `${product.stock} in stock`}
+              </div>
+
               <div className="mt-auto">
                 <div className="flex items-center justify-between mt-2">
                   <p className="font-bold text-2xl text-primary-lightest">

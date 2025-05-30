@@ -60,6 +60,22 @@ export default function ProductDetail({ params }) {
       return;
     }
 
+    if (product.isOutOfStock) {
+      setCartMessage({
+        type: "error",
+        text: "This product is out of stock.",
+      });
+      return;
+    }
+
+    if (quantity > product.stock) {
+      setCartMessage({
+        type: "error",
+        text: `Only ${product.stock} items available in stock.`,
+      });
+      return;
+    }
+
     try {
       setIsAddingToCart(true);
       await axios.post("/api/cart", {
@@ -78,7 +94,7 @@ export default function ProductDetail({ params }) {
     } finally {
       setIsAddingToCart(false);
     }
-  });
+  }, [selectedSize, session, product, quantity]);
 
   const handleQuantity = useCallback((newQuantity) => {
     if (newQuantity > 0) {
@@ -97,13 +113,15 @@ export default function ProductDetail({ params }) {
     return <Loading />;
   }
 
+  const maxQuantity = Math.min(product.stock, 10); // Limit to 10 or available stock
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Product Detail */}
       <section className="bg-white rounded-xl shadow-md overflow-hidden">
         <div className="md:flex">
           {/* Product Image */}
-          <div className="md:w-1/2 flex-center p-8">
+          <div className="md:w-1/2 flex-center p-8 relative">
             <Image
               src={`${getImageUrl(product.images)}`}
               alt={product.name}
@@ -112,6 +130,12 @@ export default function ProductDetail({ params }) {
               className="object-contain max-h-[500px] w-auto"
               priority
             />
+            {/* Stock Status Badge */}
+            {product.isOutOfStock && (
+              <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                Out of Stock
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
@@ -131,6 +155,24 @@ export default function ProductDetail({ params }) {
               {/* Price */}
               <div className="text-3xl font-bold text-primary-medium">
                 {formatPrice(product.price)}
+              </div>
+
+              {/* Stock Information */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-primary-darkest">
+                    Stock:
+                  </span>
+                  <span
+                    className={`font-medium ${
+                      product.isOutOfStock ? "text-red-600" : "text-green-600"
+                    }`}
+                  >
+                    {product.isOutOfStock
+                      ? "Out of Stock"
+                      : `${product.stock} available`}
+                  </span>
+                </div>
               </div>
 
               {/* Description */}
@@ -156,10 +198,15 @@ export default function ProductDetail({ params }) {
                       <button
                         key={index}
                         onClick={() => handleSizeClick(size)}
+                        disabled={product.isOutOfStock}
                         className={`px-4 py-2 rounded-md border-2 transition-all ${
                           selectedSize === size
                             ? "bg-primary-medium text-primary-lightest border-primary-medium"
                             : "border-primary-light hover:border-primary-medium"
+                        } ${
+                          product.isOutOfStock
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
                         }`}
                       >
                         {size}
@@ -177,7 +224,8 @@ export default function ProductDetail({ params }) {
                 <div className="flex items-center rounded-md border border-primary-light w-36">
                   <button
                     onClick={() => handleQuantity(quantity - 1)}
-                    className="flex-1 text-xl font-medium px-3 py-2 hover:bg-white transition-colors rounded-l-md"
+                    disabled={product.isOutOfStock || quantity <= 1}
+                    className="flex-1 text-xl font-medium px-3 py-2 hover:bg-white transition-colors rounded-l-md disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     -
                   </button>
@@ -186,11 +234,17 @@ export default function ProductDetail({ params }) {
                   </span>
                   <button
                     onClick={() => handleQuantity(quantity + 1)}
-                    className="flex-1 text-xl font-medium px-3 py-2 hover:bg-white transition-colors rounded-r-md"
+                    disabled={product.isOutOfStock || quantity >= maxQuantity}
+                    className="flex-1 text-xl font-medium px-3 py-2 hover:bg-white transition-colors rounded-r-md disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     +
                   </button>
                 </div>
+                {!product.isOutOfStock && quantity >= maxQuantity && (
+                  <p className="text-sm text-orange-600 mt-1">
+                    Maximum quantity available: {maxQuantity}
+                  </p>
+                )}
               </div>
 
               {/* Subtotal */}
@@ -205,10 +259,18 @@ export default function ProductDetail({ params }) {
               <div className="space-y-3">
                 <button
                   onClick={handleAddToCart}
-                  disabled={isAddingToCart}
-                  className="w-full bg-primary-medium text-primary-lightest py-3 px-6 rounded-md font-medium hover:bg-opacity-90 transition-all focus:outline-none focus:ring-2 focus:ring-primary-medium focus:ring-opacity-50 disabled:opacity-70"
+                  disabled={isAddingToCart || product.isOutOfStock}
+                  className={`w-full py-3 px-6 rounded-md font-medium transition-all focus:outline-none focus:ring-2 focus:ring-primary-medium focus:ring-opacity-50 ${
+                    product.isOutOfStock
+                      ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                      : "bg-primary-medium text-primary-lightest hover:bg-opacity-90 disabled:opacity-70"
+                  }`}
                 >
-                  {isAddingToCart ? "Adding..." : "Add to Cart"}
+                  {product.isOutOfStock
+                    ? "Out of Stock"
+                    : isAddingToCart
+                    ? "Adding..."
+                    : "Add to Cart"}
                 </button>
 
                 {cartMessage && (

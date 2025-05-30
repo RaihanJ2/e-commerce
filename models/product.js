@@ -28,10 +28,25 @@ const ProductSchema = new Schema({
     type: [String],
     required: true,
   },
+  stock: {
+    type: Number,
+    required: true,
+    default: 0,
+    min: 0,
+  },
   avgRatings: {
     type: Number,
   },
 });
+
+// Virtual field to check if product is out of stock
+ProductSchema.virtual("isOutOfStock").get(function () {
+  return this.stock <= 0;
+});
+
+// Ensure virtual fields are serialized
+ProductSchema.set("toJSON", { virtuals: true });
+ProductSchema.set("toObject", { virtuals: true });
 
 const Product = models.Product || model("Product", ProductSchema);
 
