@@ -24,6 +24,7 @@ const AdminProductsPage = () => {
     images: "",
     description: [""],
     size: [],
+    stock: "", // Added stock field
   });
   const [error, setError] = useState("");
 
@@ -61,14 +62,27 @@ const AdminProductsPage = () => {
       !formData.price ||
       !formData.images ||
       !formData.description[0] ||
-      formData.size.length === 0
+      formData.size.length === 0 ||
+      formData.stock === "" // Added stock validation
     ) {
       setError("All required fields must be filled");
       return;
     }
 
+    // Validate stock is a non-negative number
+    const stockValue = parseInt(formData.stock);
+    if (isNaN(stockValue) || stockValue < 0) {
+      setError("Stock must be a valid number (0 or greater)");
+      return;
+    }
+
     try {
-      await axios.post("/api/admin/products", formData);
+      const submitData = {
+        ...formData,
+        stock: stockValue, // Convert stock to number
+      };
+
+      await axios.post("/api/admin/products", submitData);
       setShowAddModal(false);
       setFormData({
         name: "",
@@ -77,6 +91,7 @@ const AdminProductsPage = () => {
         images: "",
         description: [""],
         size: [],
+        stock: "", // Reset stock field
       });
       fetchProducts();
       setError("");
@@ -99,6 +114,15 @@ const AdminProductsPage = () => {
         "Failed to delete product: " +
           (err.response?.data?.message || err.message)
       );
+    }
+  };
+
+  // Helper function to get stock status
+  const getStockStatus = (stock) => {
+    if (stock === 0) {
+      return { text: "Out of Stock", color: "text-red-500" };
+    } else {
+      return { text: `${stock}`, color: "text-green-500" };
     }
   };
 
@@ -136,19 +160,22 @@ const AdminProductsPage = () => {
           <table className="min-w-full divide-y divide-primary-light">
             <thead className="bg-primary-darkest text-primary-lightest">
               <tr>
-                <th className="px-6 py-3.5 text-left text-xs font-semibold  uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">
                   Image
                 </th>
-                <th className="px-6 py-3.5 text-left text-xs font-semibold  uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">
                   Name
                 </th>
-                <th className="px-6 py-3.5 text-left text-xs font-semibold  uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">
                   Category
                 </th>
-                <th className="px-6 py-3.5 text-left text-xs font-semibold  uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">
                   Price
                 </th>
-                <th className="px-6 py-3.5 text-left text-xs font-semibold  uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">
+                  Stock
+                </th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -156,59 +183,67 @@ const AdminProductsPage = () => {
             <tbody className="bg-primary-darkest text-primary-lightest divide-y divide-primary-light">
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-8 text-center">
+                  <td colSpan="6" className="px-6 py-8 text-center">
                     No products found. Add your first product using the button
                     above.
                   </td>
                 </tr>
               ) : (
-                products.map((product) => (
-                  <tr
-                    key={product._id}
-                    className="hover:bg-primary-dark transition duration-150"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="relative h-16 w-16 rounded-md overflow-hidden border border-primary-light bg-white">
-                        <Image
-                          src={getImageUrl(product.images)}
-                          alt={product.name}
-                          fill
-                          className="object-contain"
-                          onError={(e) => {
-                            e.currentTarget.src = "/placeholder-product.jpg";
-                          }}
-                        />
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap font-medium ">
-                      {product.name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap ">
-                      {product.category}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap ">
-                      {formatPrice(product.price)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center justify-around gap-3">
-                        <button
-                          onClick={() =>
-                            router.push(`/admin/products/${product._id}`)
-                          }
-                          className="bg-primary-medium/80 text-primary-lightest px-4 py-2 rounded hover:bg-primary-medium font-medium transition-colors"
-                        >
-                          <FaGear />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(product._id)}
-                          className="bg-red-600 hover:bg-red-800 text-primary-lightest px-4 py-2 rounded font-medium transition-colors"
-                        >
-                          <FaTrashAlt />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                products.map((product) => {
+                  const stockStatus = getStockStatus(product.stock || 0);
+                  return (
+                    <tr
+                      key={product._id}
+                      className="hover:bg-primary-dark transition duration-150"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="relative h-16 w-16 rounded-md overflow-hidden border border-primary-light bg-white">
+                          <Image
+                            src={getImageUrl(product.images)}
+                            alt={product.name}
+                            fill
+                            className="object-contain"
+                            onError={(e) => {
+                              e.currentTarget.src = "/placeholder-product.jpg";
+                            }}
+                          />
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap font-medium">
+                        {product.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {product.category}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {formatPrice(product.price)}
+                      </td>
+                      <td
+                        className={`px-6 py-4 whitespace-nowrap font-medium ${stockStatus.color}`}
+                      >
+                        {stockStatus.text}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center justify-around gap-3">
+                          <button
+                            onClick={() =>
+                              router.push(`/admin/products/${product._id}`)
+                            }
+                            className="bg-primary-medium/80 text-primary-lightest px-4 py-2 rounded hover:bg-primary-medium font-medium transition-colors"
+                          >
+                            <FaGear />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(product._id)}
+                            className="bg-red-600 hover:bg-red-800 text-primary-lightest px-4 py-2 rounded font-medium transition-colors"
+                          >
+                            <FaTrashAlt />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

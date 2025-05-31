@@ -6,6 +6,7 @@ import Order from "@models/order";
 import User from "@models/user";
 import Address from "@models/address";
 import Cart from "@models/cart";
+import Product from "@models/product";
 
 const sessionId = async () => {
   const session = await getServerSession(authOptions);
@@ -20,6 +21,66 @@ const clearCart = async (userId) => {
     await Cart.deleteMany({ userId });
   } catch (error) {
     console.error("Failed to clear cart:", error);
+  }
+};
+
+// Helper function to check and reserve stock
+const checkAndReserveStock = async (items) => {
+  const stockChecks = [];
+
+  // First, check if all items have sufficient stock
+  for (const item of items) {
+    const product = await Product.findById(item.productId);
+    if (!product) {
+      throw new Error(`Product ${item.productId} not found`);
+    }
+    if (product.stock < item.quantity) {
+      throw new Error(
+        `Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`
+      );
+    }
+    stockChecks.push({
+      productId: item.productId,
+      quantity: item.quantity,
+      currentStock: product.stock,
+    });
+  }
+
+  // If all checks pass, update the stock
+  const stockUpdates = [];
+  try {
+    for (const check of stockChecks) {
+      const updatedProduct = await Product.findByIdAndUpdate(
+        check.productId,
+        { $inc: { stock: -check.quantity } },
+        { new: true }
+      );
+      stockUpdates.push({
+        productId: check.productId,
+        quantity: check.quantity,
+      });
+    }
+    return stockUpdates;
+  } catch (error) {
+    // If any stock update fails, rollback the successful ones
+    await rollbackStockUpdates(stockUpdates);
+    throw error;
+  }
+};
+
+// Helper function to rollback stock updates in case of failure
+const rollbackStockUpdates = async (stockUpdates) => {
+  for (const update of stockUpdates) {
+    try {
+      await Product.findByIdAndUpdate(update.productId, {
+        $inc: { stock: update.quantity },
+      });
+    } catch (error) {
+      console.error(
+        `Failed to rollback stock for product ${update.productId}:`,
+        error
+      );
+    }
   }
 };
 
@@ -101,14 +162,35 @@ export const POST = async (req) => {
       );
     }
 
-    const order = await Order.create({
-      userId,
-      items: updatedItems,
-      subTotal,
-      ppnAmount,
-      totalAmount,
-      addressId,
-    });
+    // Check and reserve stock before creating order
+    let stockUpdates = [];
+    try {
+      stockUpdates = await checkAndReserveStock(updatedItems);
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 400,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
+
+    // Create the order
+    let order;
+    try {
+      order = await Order.create({
+        userId,
+        items: updatedItems,
+        subTotal,
+        ppnAmount,
+        totalAmount,
+        addressId,
+      });
+    } catch (error) {
+      // If order creation fails, rollback stock updates
+      await rollbackStockUpdates(stockUpdates);
+      throw error;
+    }
 
     const customerDetails = {
       name: user.name,
@@ -116,36 +198,46 @@ export const POST = async (req) => {
       phoneNo: address.phoneNo,
     };
 
-    const transaction = await createTransaction(
-      order._id.toString(),
-      totalAmount,
-      customerDetails,
-      updatedItems,
-      ppnAmount
-    );
+    try {
+      const transaction = await createTransaction(
+        order._id.toString(),
+        totalAmount,
+        customerDetails,
+        updatedItems,
+        ppnAmount
+      );
 
-    // If transaction creation is successful, clear the cart
-    if (transaction && transaction.token) {
-      await clearCart(userId);
-      return new Response(
-        JSON.stringify({
-          order,
-          transactionToken: transaction.token,
-        }),
-        {
-          status: 200,
+      // If transaction creation is successful, clear the cart
+      if (transaction && transaction.token) {
+        await clearCart(userId);
+        return new Response(
+          JSON.stringify({
+            order,
+            transactionToken: transaction.token,
+          }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+      } else {
+        // If transaction fails, rollback stock and delete the order
+        await rollbackStockUpdates(stockUpdates);
+        await Order.findByIdAndDelete(order._id);
+        return new Response(JSON.stringify({ error: "Transaction failed" }), {
+          status: 500,
           headers: {
             "Content-Type": "application/json",
           },
-        }
-      );
-    } else {
-      return new Response(JSON.stringify({ error: "Transaction failed" }), {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+        });
+      }
+    } catch (error) {
+      // If transaction creation fails, rollback stock and delete the order
+      await rollbackStockUpdates(stockUpdates);
+      await Order.findByIdAndDelete(order._id);
+      throw error;
     }
   } catch (error) {
     console.error("Failed to create order:", error);

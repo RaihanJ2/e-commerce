@@ -26,6 +26,7 @@ const EditProductPage = () => {
     images: "",
     description: [""],
     size: [],
+    stock: "", // Added stock field
   });
 
   // Available categories and sizes
@@ -61,6 +62,7 @@ const EditProductPage = () => {
         description,
         size,
         price: product.price.toString(),
+        stock: (product.stock || 0).toString(), // Handle stock field
       });
 
       setError("");
@@ -130,14 +132,27 @@ const EditProductPage = () => {
       !formData.price ||
       !formData.images ||
       !formData.description[0] ||
-      formData.size.length === 0
+      formData.size.length === 0 ||
+      formData.stock === "" // Added stock validation
     ) {
       setError("All required fields must be filled");
       return;
     }
 
+    // Validate stock is a non-negative number
+    const stockValue = parseInt(formData.stock);
+    if (isNaN(stockValue) || stockValue < 0) {
+      setError("Stock must be a valid number (0 or greater)");
+      return;
+    }
+
     try {
-      await axios.put(`/api/admin/products/${productId}`, formData);
+      const submitData = {
+        ...formData,
+        stock: stockValue, // Convert stock to number
+      };
+
+      await axios.put(`/api/admin/products/${productId}`, submitData);
       setSuccess("Product updated successfully!");
       // Scroll to top to show success message
       window.scrollTo(0, 0);
@@ -219,8 +234,8 @@ const EditProductPage = () => {
             />
           </div>
 
-          {/* Price and Category in the same row for larger screens */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Price, Category, and Stock in the same row for larger screens */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Price */}
             <div>
               <label className="block text-primary-lightest text-sm font-medium mb-2">
@@ -257,6 +272,27 @@ const EditProductPage = () => {
                 ))}
               </select>
             </div>
+
+            {/* Stock */}
+            <div>
+              <label className="block text-primary-lightest text-sm font-medium mb-2">
+                Stock Quantity *
+              </label>
+              <input
+                type="number"
+                name="stock"
+                value={formData.stock}
+                onChange={handleChange}
+                min="0"
+                className="w-full px-3 py-2 bg-primary-dark text-primary-lightest border border-primary-light rounded-md focus:outline-none focus:ring-2 focus:ring-primary-medium"
+                required
+              />
+              {parseInt(formData.stock) === 0 && (
+                <p className="text-orange-400 text-xs mt-1">
+                  ⚠️ Product will be marked as out of stock
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Image URL */}
@@ -280,7 +316,7 @@ const EditProductPage = () => {
           {/* Updated Sizes Section */}
           <div className="mb-4">
             <label className="block text-primary-lightest text-sm font-medium mb-2">
-              Sizes
+              Sizes *
             </label>
 
             {/* Custom Size Input */}
